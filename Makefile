@@ -1,0 +1,54 @@
+# Default to debug build
+BUILD_TYPE ?= debug
+
+# Chose the compiler you prefer
+CC ?= clang
+
+# Common flags for both builds
+COMMON_CFLAGS := -std=c99 \
+	-Wall \
+	-Wextra \
+	-Werror \
+	-pedantic \
+	-fdiagnostics-color=always \
+	-fno-common \
+	-Winit-self \
+	-Wfloat-equal \
+	-Wundef \
+	-Wshadow \
+	-Wpointer-arith \
+	-Wcast-align \
+	-Wstrict-prototypes \
+	-Wstrict-overflow=5 \
+	-Wwrite-strings \
+	-Waggregate-return \
+	-Wcast-qual \
+	-Wswitch-default \
+	-Wswitch-enum \
+	-Wconversion \
+	-Wno-ignored-qualifiers \
+	-Wno-aggregate-return
+
+# Platform-specific flags
+ifeq ($(UNAME_S),Darwin)
+    COMMON_CFLAGS += -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+endif
+
+# Debug-specific flags
+DEBUG_CFLAGS := -g -O0 -fsanitize=address,undefined -DDEBUG
+
+# Release-specific flags
+RELEASE_CFLAGS := -O2 -DNDEBUG
+
+# Set flags based on build type
+ifeq ($(BUILD_TYPE),release)
+    CFLAGS := $(COMMON_CFLAGS) $(RELEASE_CFLAGS)
+else
+    CFLAGS := $(COMMON_CFLAGS) $(DEBUG_CFLAGS)
+endif
+
+###########
+
+.PHONY: clean
+clean:
+	rm -rf src/**/*.dSYM src/**/*.o
