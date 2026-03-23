@@ -1,3 +1,3 @@
-src/**/*.dSYM/
-src/**/*.o
-
+**/*.dSYM/
+**/*.o
+src/main
