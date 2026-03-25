@@ -71,9 +71,12 @@ lib/sokol.o: CFLAGS := -D$(SOKOL_BACKEND) -O2
 lib/sokol.o: lib/sokol.m
 	$(SOKOL_CC) $(CFLAGS) -c $< -o $@
 
+src/gfx.o: CFLAGS += -D$(SOKOL_BACKEND)
+src/gfx.o: src/gfx.c | src/shader.h
+
 src/main: LDFLAGS := $(SOKOL_LDFLAGS)
 src/main: CFLAGS += -D$(SOKOL_BACKEND)
-src/main: lib/sokol.o | src/shader.h
+src/main: lib/sokol.o src/gfx.o | src/shader.h
 
 .PHONY: clean
 clean:
