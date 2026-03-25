@@ -61,8 +61,7 @@ endif
 
 ###########
 
-.PHONY: src/shader.h
-src/shader.h:
+src/shader.h: src/shader.glsl
 	tools/sokol-tools/bin/osx_arm64/sokol-shdc \
 	--input src/shader.glsl \
 	--output $@ \
@@ -74,12 +73,11 @@ lib/sokol.o: lib/sokol.m
 
 src/main: LDFLAGS := $(SOKOL_LDFLAGS)
 src/main: CFLAGS += -D$(SOKOL_BACKEND)
-src/main: lib/sokol.o
+src/main: lib/sokol.o | src/shader.h
 
 .PHONY: clean
 clean:
 	rm -rf src/**/*.dSYM src/**/*.o src/main
-
 
 .PHONY: start
 start: src/main
