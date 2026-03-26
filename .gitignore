@@ -1,4 +1,10 @@
+# builda artifacts
 **/*.dSYM/
 **/*.o
+
+# binaries
 src/main
+tools/fonts/packer
+
+# editor files
 .zed
