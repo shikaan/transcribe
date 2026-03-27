@@ -64,9 +64,9 @@ int main(int argc, char **argv) {
   FILE *outputfile = fopen(outpath, "w");
   assert(outputfile && "main: Unable to open outputfile");
 
-  puts("Baking font into bitmap...\n");
+  puts("Baking font into bitmap...");
   stbtt_BakeFontBitmap(fontbuf, 0, fontsz, bitmap, 512, 512, 32, 96, chardata);
-  puts("Baking font into bitmap... OK\n");
+  puts("Baking font into bitmap... OK");
 
   unsigned char *asbuf = (unsigned char *)chardata;
   size_t bufsz = sizeof(chardata);
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
   printf("Packing a font at %s...\n", outpath);
   fprintf(outputfile,
           "#pragma once\n"
-          "unsigned char baked%s[%lu] = {",
+          "_Alignas(4) unsigned char baked%s[%lu] = {",
           file, bufsz);
   for (int i = 0; i < bufsz; i++) {
     if (i % 12 == 0) {
