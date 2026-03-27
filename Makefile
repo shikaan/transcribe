@@ -5,7 +5,7 @@ BUILD_TYPE ?= debug
 CC ?= clang
 
 # Common flags for both builds
-COMMON_CFLAGS := -std=c99 \
+COMMON_CFLAGS := -std=c11 \
 	-Wall \
 	-Wextra \
 	-Werror \
@@ -60,6 +60,8 @@ else
 endif
 
 ###########
+
+tools/fonts/packer: CFLAGS :=
 
 src/shader.h: src/shader.glsl
 	tools/sokol-tools/bin/osx_arm64/sokol-shdc \

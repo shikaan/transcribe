@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 
   char outpath[256] = {0};
   char *file = filename(basename(fontpath));
-  snprintf(outpath, sizeof(outpath), "%s/%s.%f.h", dirname(fontpath), file,
+  snprintf(outpath, sizeof(outpath), "%s/%s.%.0f.h", dirname(fontpath), file,
            fontsz);
 
   FILE *fontfile = fopen(fontpath, "r");
@@ -66,6 +66,9 @@ int main(int argc, char **argv) {
 
   puts("Baking font into bitmap...");
   stbtt_BakeFontBitmap(fontbuf, 0, fontsz, bitmap, 512, 512, 32, 96, chardata);
+  // This solid dot will be used to render rectangles.
+  // Prevents adding a second pipeline
+  bitmap[512 * 512 - 1] = 0xFF;
   puts("Baking font into bitmap... OK");
 
   unsigned char *asbuf = (unsigned char *)chardata;

@@ -8,8 +8,10 @@ static void frame(void) {
   color_t bg = {0.5, 0.5, 0.5, 1};
   gfx_drawstart(bg);
 
-  color_t color = {1, 1, 1, 1};
-  gfx_rect(5, 5, 50, 50, color);
+  color_t green = {0, 1, 0, 1};
+  gfx_rect(5, 5, 50, 50, green);
+  color_t black = {0, 0, 0, 1};
+  gfx_glyph(160, 160, 'a', black);
   gfx_drawend();
 }
 static void cleanup(void) { gfx_deinit(); }
