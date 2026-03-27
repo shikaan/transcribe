@@ -47,12 +47,13 @@ int main(int argc, char **argv) {
   }
 
   const char *fontpath = argv[1];
-  char outpath[256] = {0};
-  char *file = filename(basename(fontpath));
-  snprintf(outpath, 256, "%s/%s.h", dirname(fontpath), file);
-
   float fontsz = atof(argv[2]);
   assert(!isnan(fontsz) && "main: Unable to parse font size");
+
+  char outpath[256] = {0};
+  char *file = filename(basename(fontpath));
+  snprintf(outpath, sizeof(outpath), "%s/%s.%f.h", dirname(fontpath), file,
+           fontsz);
 
   FILE *fontfile = fopen(fontpath, "r");
   assert(fontfile && "main: Unable to open font file");
@@ -60,15 +61,21 @@ int main(int argc, char **argv) {
   size_t sz = fread(fontbuf, 1, 1 << 20, fontfile);
   assert(sz > 0 && "main: Unable to read opened font file");
 
-  stbtt_BakeFontBitmap(fontbuf, 0, fontsz, bitmap, 512, 512, 32, 96, chardata);
-
   FILE *outputfile = fopen(outpath, "w");
   assert(outputfile && "main: Unable to open outputfile");
+
+  puts("Baking font into bitmap...\n");
+  stbtt_BakeFontBitmap(fontbuf, 0, fontsz, bitmap, 512, 512, 32, 96, chardata);
+  puts("Baking font into bitmap... OK\n");
 
   unsigned char *asbuf = (unsigned char *)chardata;
   size_t bufsz = sizeof(chardata);
 
-  fprintf(outputfile, "#pragma once\nunsigned char %s[] = {", file);
+  printf("Packing a font at %s...\n", outpath);
+  fprintf(outputfile,
+          "#pragma once\n"
+          "unsigned char baked%s[%lu] = {",
+          file, bufsz);
   for (int i = 0; i < bufsz; i++) {
     if (i % 12 == 0) {
       fprintf(outputfile, "\n ");
@@ -76,7 +83,18 @@ int main(int argc, char **argv) {
     unsigned char byte = asbuf[i];
     fprintf(outputfile, " 0x%02x,", byte);
   }
-  fprintf(outputfile, "\n};\nunsigned int n%s = %lu;\n", file, bufsz);
+  fprintf(outputfile, "\n};\n");
+
+  fprintf(outputfile, "unsigned char atlas%s[%d] = {", file, 512 * 512);
+  for (int i = 0; i < len(bitmap); i++) {
+    if (i % 12 == 0) {
+      fprintf(outputfile, "\n ");
+    }
+    unsigned char byte = bitmap[i];
+    fprintf(outputfile, " 0x%02x,", byte);
+  }
+  fprintf(outputfile, "\n};\n");
+  printf("Packing a font at %s... OK\n", outpath);
 
   return 0;
 }
