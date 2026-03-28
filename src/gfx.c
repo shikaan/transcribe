@@ -3,8 +3,9 @@
 #include "../lib/sokol_app.h"
 #include "../lib/sokol_gfx.h"
 #include "../lib/sokol_glue.h"
-#include "assets/InterDisplayRegular.16.h"
+#include "assets/InterDisplayRegular.64.h"
 #include "shader.h"
+#include "slice.h"
 #include <stdio.h>
 
 typedef struct {
@@ -53,6 +54,7 @@ void gfx_init(void) {
   pipdesc.colors[0].blend.enabled = true;
   pipdesc.colors[0].blend.src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA;
   pipdesc.colors[0].blend.dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+  pipdesc.colors[0].write_mask = SG_COLORMASK_RGB;
   pipe = sg_make_pipeline(&pipdesc);
 
   sg_image_data imagedata = {0};
@@ -119,12 +121,16 @@ void gfx_drawend(void) {
 }
 
 void gfx_rect(float x, float y, float w, float h, color_t col) {
+  float dpi = sapp_dpi_scale();
   float winw = (float)sapp_width();
   float winh = (float)sapp_height();
-  float l = (x / winw) * 2.0f - 1.0f;
-  float r = ((x + w) / winw) * 2.0f - 1.0f;
-  float t = 1.0f - (y / winh) * 2.0f;
-  float b = 1.0f - ((y + h) / winh) * 2.0f;
+
+  // GPU coordinates are in NDC (normalized device coordinates) which is in the
+  // -1, +1 range. The 2.0f scaling is used to map [0,1] -> [-1 +1]
+  float l = (x * dpi / winw) * 2.0f - 1.0f;
+  float r = ((x + w) * dpi / winw) * 2.0f - 1.0f;
+  float t = 1.0f - (y * dpi / winh) * 2.0f;
+  float b = 1.0f - ((y + h) * dpi / winh) * 2.0f;
 
   float quad[] = {
       // clang-format off
@@ -143,24 +149,31 @@ void gfx_rect(float x, float y, float w, float h, color_t col) {
   quads.len++;
 }
 
-void gfx_glyph(float x, float y, char c, color_t col) {
+// Draws a glyph and return the cursor offset to draw the next one
+static float gfx_glyph(float x, float y, char c, color_t col) {
   glyph_t g = font.glyphs[c - 32];
 
+  float scale = sapp_dpi_scale();
   float winw = (float)sapp_width();
   float winh = (float)sapp_height();
-  x = (x / winw) * 2.0f - 1.0f;
-  y = 1.0f - (y / winh) * 2.0f;
 
-  float gw = (g.u1 - g.u0) / winw * 2.0f;
-  float gh = (g.v1 - g.v0) / winh * 2.0f;
-  float xyl = x + g.xoff / winw * 2.0f;
-  float xyt = y - g.yoff / winh * 2.0f;
+  // x,y are logical pixels; g.xoff/yoff are physical pixels
+  // Scale cursor to physical, then add the already-physical offset
+  float px = x * scale + g.xoff;
+  float py = y * scale + g.yoff;
+
+  // GPU coordinates are in NDC (normalized device coordinates) which is in the
+  // -1, +1 range. The 2.0f scaling is used to map [0,1] -> [-1 +1]
+  float gw = (float)(g.x1 - g.x0) / winw * 2.0f;
+  float gh = (float)(g.y1 - g.y0) / winh * 2.0f;
+  float xyl = px / winw * 2.0f - 1.0f;
+  float xyt = 1.0f - py / winh * 2.0f;
   float xyr = xyl + gw;
   float xyb = xyt - gh;
-  float uvl = g.u0 / 512.0f;
-  float uvt = g.v0 / 512.0f;
-  float uvr = g.u1 / 512.0f;
-  float uvb = g.v1 / 512.0f;
+  float uvl = g.x0 / 512.0f;
+  float uvt = g.y0 / 512.0f;
+  float uvr = g.x1 / 512.0f;
+  float uvb = g.y1 / 512.0f;
 
   float quad[] = {
       // clang-format off
@@ -177,4 +190,25 @@ void gfx_glyph(float x, float y, char c, color_t col) {
   for (int i = 0; i < VERTS_PER_QUAD * VERT_SIZE; i++)
     quads.buf[off + i] = quad[i];
   quads.len++;
+
+  return g.xadvance / scale;
+}
+
+void gfx_text(float x, float y, string_t string, color_t color) {
+  float offset = 0;
+  for (unsigned int i = 0; i < string.len; i++) {
+    offset += gfx_glyph(x + offset, y, string.buf[i], color);
+  }
+}
+
+void gfx_textbox(string_t string, float *w, float *h) {
+  float scale = sapp_dpi_scale();
+  *w = 0;
+  *h = 0;
+  for (unsigned int i = 0; i < string.len; i++) {
+    glyph_t g = font.glyphs[(unsigned char)string.buf[i] - 32];
+    *w += g.xadvance / scale;
+    float gh = (g.y1 - g.y0) / scale;
+    *h = (gh > *h) ? gh : *h;
+  }
 }

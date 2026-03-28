@@ -1,5 +1,6 @@
 #pragma once
 
+#include "slice.h"
 enum {
   MAX_RECTS = 1024,
   VERT_SIZE = 8,
@@ -12,7 +13,7 @@ typedef struct {
 } color_t;
 
 typedef struct {
-  unsigned short u0, v0, u1, v1;
+  unsigned short x0, y0, x1, y1;
   float xoff, yoff, xadvance;
 } glyph_t;
 
@@ -29,4 +30,5 @@ void gfx_drawstart(color_t bg);
 void gfx_drawend(void);
 
 void gfx_rect(float x, float y, float w, float h, color_t col);
-void gfx_glyph(float x, float y, char a, color_t col);
+void gfx_text(float x, float y, string_t string, color_t col);
+void gfx_textbox(string_t string, float *w, float *h);
