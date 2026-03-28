@@ -1,4 +1,4 @@
-# builda artifacts
+# build artifacts
 **/*.dSYM/
 **/*.o
 
@@ -8,3 +8,5 @@ tools/fonts/packer
 
 # editor files
 .zed
+
+.todo
