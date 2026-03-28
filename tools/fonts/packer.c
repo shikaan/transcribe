@@ -29,47 +29,16 @@ char *filename(const char *basename) {
   return strdup(basename);
 }
 
-char *dirname(const char *path) {
-  for (int i = strlen(path); i >= 0; i--) {
-    if (path[i] == '/') {
-      return strndup(path, i);
-    }
-  }
-  return ".";
-}
-
-int main(int argc, char **argv) {
-  if (argc != 3) {
-    fprintf(stderr, "Packs TrueTypeFont into a bitmap and saves it to disk.\n");
-    fprintf(stderr, "usage: %s [FONT FILE] [FONT SIZE]\n", argv[0]);
-    fprintf(stderr, "       %s font.ttf 16.0\n", argv[0]);
-    exit(1);
-  }
-
-  const char *fontpath = argv[1];
-  float fontsz = atof(argv[2]);
-  assert(!isnan(fontsz) && "main: Unable to parse font size");
-
-  char outpath[256] = {0};
-  char *file = filename(basename(fontpath));
-  snprintf(outpath, sizeof(outpath), "%s/%s.%.0f.h", dirname(fontpath), file,
-           fontsz);
-
-  FILE *fontfile = fopen(fontpath, "r");
-  assert(fontfile && "main: Unable to open font file");
-
-  size_t sz = fread(fontbuf, 1, 1 << 20, fontfile);
-  assert(sz > 0 && "main: Unable to read opened font file");
-
-  FILE *outputfile = fopen(outpath, "w");
-  assert(outputfile && "main: Unable to open outputfile");
-
-  puts("Baking font into bitmap...");
+// Writes a file on disk with the same output shape as xxd -i
+void writefile(const char *outpath, const char *file, int scale, float fontsz) {
+  memset(bitmap, 0, sizeof(bitmap));
   stbtt_BakeFontBitmap(fontbuf, 0, fontsz, bitmap, 512, 512, 32, 96, chardata);
   // This solid dot will be used to render rectangles.
   // Prevents adding a second pipeline
   bitmap[512 * 512 - 1] = 0xFF;
-  puts("Baking font into bitmap... OK");
+
+  FILE *outputfile = fopen(outpath, "w");
+  assert(outputfile && "writefile: Unable to open outputfile");
 
   unsigned char *asbuf = (unsigned char *)chardata;
   size_t bufsz = sizeof(chardata);
@@ -77,27 +46,68 @@ int main(int argc, char **argv) {
   printf("Packing a font at %s...\n", outpath);
   fprintf(outputfile,
           "#pragma once\n"
-          "_Alignas(4) unsigned char baked%s[%lu] = {",
-          file, bufsz);
+          "_Alignas(4) unsigned char baked%s%dx[%lu] = {",
+          file, scale, bufsz);
   for (int i = 0; i < bufsz; i++) {
     if (i % 12 == 0) {
       fprintf(outputfile, "\n ");
     }
-    unsigned char byte = asbuf[i];
-    fprintf(outputfile, " 0x%02x,", byte);
+    fprintf(outputfile, " 0x%02x,", asbuf[i]);
   }
   fprintf(outputfile, "\n};\n");
 
-  fprintf(outputfile, "unsigned char atlas%s[%d] = {", file, 512 * 512);
+  fprintf(outputfile, "unsigned char atlas%s%dx[%d] = {", file, scale,
+          512 * 512);
   for (int i = 0; i < len(bitmap); i++) {
     if (i % 12 == 0) {
       fprintf(outputfile, "\n ");
     }
-    unsigned char byte = bitmap[i];
-    fprintf(outputfile, " 0x%02x,", byte);
+    fprintf(outputfile, " 0x%02x,", bitmap[i]);
   }
   fprintf(outputfile, "\n};\n");
   printf("Packing a font at %s... OK\n", outpath);
+
+  fclose(outputfile);
+}
+
+int main(int argc, char **argv) {
+  if (argc != 3) {
+    fprintf(stderr, "Packs TrueTypeFont into a bitmap and saves it to disk.\n");
+    fprintf(stderr, "Size is in points (at 72dpi) as in design tools.\n\n");
+    fprintf(stderr, "usage: %s [font file] [font size in points]\n", argv[0]);
+    fprintf(stderr, "       %s font.ttf 12\n", argv[0]);
+    exit(1);
+  }
+
+  const char *fontpath = argv[1];
+  float points = atof(argv[2]);
+  assert(!isnan(points) && "main: Unable to parse font size");
+
+  // Figma uses points at 72 DPI; convert to pixels at 96 DPI
+  float fontsz = points * (96.0f / 72.0f);
+  float fontsz2x = fontsz * 2.0f;
+
+  char *file = filename(basename(fontpath));
+  char *dir = "src/assets";
+
+  FILE *fontfile = fopen(fontpath, "r");
+  assert(fontfile && "main: Unable to open font file");
+
+  size_t sz = fread(fontbuf, 1, 1 << 20, fontfile);
+  assert(sz > 0 && "main: Unable to read opened font file");
+  fclose(fontfile);
+
+  char outpath[256];
+
+  puts("Baking font into bitmap...");
+  snprintf(outpath, sizeof(outpath), "%s/%s.%.0f.h", dir, file, points);
+  writefile(outpath, file, 1, fontsz);
+  puts("Baking font into bitmap... OK");
+
+  puts("Baking hi-res font into bitmap...");
+  snprintf(outpath, sizeof(outpath), "%s/%s.%.0f@2x.h", dir, file, points);
+  writefile(outpath, file, 2, fontsz2x);
+  puts("Baking hi-res font into bitmap... OK");
 
   return 0;
 }
