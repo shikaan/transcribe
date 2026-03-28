@@ -28,9 +28,9 @@ void ui_titlebar(void) {
            theme->colors[COLOR_BARBACKGROUND]);
 
   string_t logo = fromconst("Transcribling");
-  gfx_textbox(logo, &txtw, &txth);
+  gfx_textbox(logo, FONT_SANSBOLD, &txtw, &txth);
   currentx += padx;
-  gfx_text(currentx, height / 2 + txth / 2, logo,
+  gfx_text(currentx, height / 2 + txth / 2, logo, FONT_SANSBOLD,
            theme->colors[COLOR_FOREGROUND]);
 
   currentx += txtw + padx;
@@ -38,9 +38,9 @@ void ui_titlebar(void) {
           theme->colors[COLOR_TEXTDIM]);
 
   string_t open = fromconst("Open");
-  gfx_textbox(open, &txtw, &txth);
+  gfx_textbox(open, FONT_SANS, &txtw, &txth);
   currentx += spacebetween;
-  gfx_text(currentx, height / 2 + txth / 2, open,
+  gfx_text(currentx, height / 2 + txth / 2, open, FONT_SANS,
            theme->colors[COLOR_TEXTLIGHT]);
 
   currentx += txtw + spacebetween;
@@ -48,9 +48,9 @@ void ui_titlebar(void) {
           theme->colors[COLOR_TEXTDIM]);
 
   string_t file = fromconst("Miles Davis - So What.mp3");
-  gfx_textbox(logo, &txtw, &txth);
+  gfx_textbox(logo, FONT_SANS, &txtw, &txth);
   currentx += spacebetween;
-  gfx_text(currentx, height / 2 + txth / 2, file,
+  gfx_text(currentx, height / 2 + txth / 2, file, FONT_SANS,
            theme->colors[COLOR_TEXTLIGHT]);
 
   ui_line(0, height, winw, LINEDIR_H, theme->colors[COLOR_TEXTDIM]);

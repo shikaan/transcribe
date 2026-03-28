@@ -3,31 +3,43 @@
 #include "../lib/sokol_app.h"
 #include "../lib/sokol_gfx.h"
 #include "../lib/sokol_glue.h"
+#include "assets/InterDisplayRegular.12@2x.h"
 #include "assets/InterDisplaySemiBold.12@2x.h"
 #include "shader.h"
 #include "string.h"
+#include <stddef.h>
 #include <stdio.h>
 
+enum {
+  QUADS = FONTS + 1, // a buffer per font and one for rects
+  RECT = FONTS,      // last quad buffer is for rects
+};
+
 typedef struct {
-  float buf[MAX_RECTS * VERT_SIZE * VERTS_PER_QUAD];
-  int len;
+  float buf[MAX_QUADS * VERT_SIZE * VERTS_PER_QUAD];
+  size_t len;
 } quads_t;
 
-static quads_t quads;
+static quads_t quads[QUADS];
+static sg_buffer buf[QUADS];
+
 static color_t bgcol;
 
-static font_t font = {
-    .glyphs = (glyph_t *)bakedInterDisplaySemiBold2x,
-    .nglyphs = sizeof(bakedInterDisplaySemiBold2x),
-    .atlas = atlasInterDisplaySemiBold2x,
-    .natlas = sizeof(atlasInterDisplaySemiBold2x),
+static font_t fonts[FONTS] = {
+    {.glyphs = (glyph_t *)bakedInterDisplayRegular2x,
+     .nglyphs = sizeof(bakedInterDisplayRegular2x),
+     .bitmap = atlasInterDisplayRegular2x,
+     .nbitmap = sizeof(atlasInterDisplayRegular2x)},
+    {.glyphs = (glyph_t *)bakedInterDisplaySemiBold2x,
+     .nglyphs = sizeof(bakedInterDisplaySemiBold2x),
+     .bitmap = atlasInterDisplaySemiBold2x,
+     .nbitmap = sizeof(atlasInterDisplaySemiBold2x)},
 };
 
 static sg_pipeline pipe;
-static sg_buffer buf;
-static sg_image atlas;
-static sg_view atlasview;
 static sg_sampler smp;
+static sg_image atlases[FONTS];
+static sg_view atlasviews[FONTS];
 
 void logger(const char *tag, uint32_t log_level, uint32_t log_item_id,
             const char *message_or_null, uint32_t line_nr,
@@ -40,9 +52,10 @@ void logger(const char *tag, uint32_t log_level, uint32_t log_item_id,
 }
 
 void gfx_init(void) {
-  const sg_desc desc = {.environment = sglue_environment(),
-                        .logger.func = logger};
-  sg_setup(&desc);
+  sg_setup(&(sg_desc){
+      .environment = sglue_environment(),
+      .logger.func = logger,
+  });
 
   sg_shader shd = sg_make_shader(shader_shader_desc(sg_query_backend()));
 
@@ -57,80 +70,93 @@ void gfx_init(void) {
   pipdesc.colors[0].write_mask = SG_COLORMASK_RGB;
   pipe = sg_make_pipeline(&pipdesc);
 
-  sg_image_data imagedata = {0};
-  sg_range miplvl = {0};
-  sg_image_desc imagedesc = {0};
-  miplvl.ptr = font.atlas;
-  miplvl.size = font.natlas;
-  imagedata.mip_levels[0] = miplvl;
-  imagedesc.pixel_format = SG_PIXELFORMAT_R8;
-  imagedesc.width = 512;
-  imagedesc.height = 512;
-  imagedesc.data = imagedata;
-  atlas = sg_make_image(&imagedesc);
+  for (int font = 0; font < FONTS; font++) {
+    atlases[font] = sg_make_image(&(sg_image_desc){
+        .pixel_format = SG_PIXELFORMAT_R8,
+        .width = 512,
+        .height = 512,
+        .data = {.mip_levels = {{.ptr = fonts[font].bitmap,
+                                 .size = fonts[font].nbitmap}}},
+    });
+    atlasviews[font] = sg_make_view(&(sg_view_desc){
+        .texture.image = atlases[font],
+    });
+  }
 
-  sg_view_desc viewdesc = {0};
-  viewdesc.texture.image = atlas;
-  atlasview = sg_make_view(&viewdesc);
+  for (int i = 0; i < QUADS; i++) {
+    buf[i] = sg_make_buffer(&(sg_buffer_desc){
+        .usage.vertex_buffer = true,
+        .usage.stream_update = true,
+        .size = sizeof(quads[i].buf),
+    });
+  }
 
-  sg_sampler_desc smpdesc = {0};
-  smpdesc.min_filter = SG_FILTER_LINEAR;
-  smpdesc.mag_filter = SG_FILTER_LINEAR;
-  smpdesc.wrap_u = SG_WRAP_CLAMP_TO_EDGE;
-  smpdesc.wrap_v = SG_WRAP_CLAMP_TO_EDGE;
+  sg_sampler_desc smpdesc = {
+      .min_filter = SG_FILTER_LINEAR,
+      .mag_filter = SG_FILTER_LINEAR,
+      .wrap_u = SG_WRAP_CLAMP_TO_EDGE,
+      .wrap_v = SG_WRAP_CLAMP_TO_EDGE,
+  };
   smp = sg_make_sampler(&smpdesc);
-
-  sg_buffer_desc bufdesc = {0};
-  bufdesc.usage.vertex_buffer = true;
-  bufdesc.usage.stream_update = true;
-  bufdesc.size = sizeof(quads.buf);
-  buf = sg_make_buffer(&bufdesc);
 }
 
 void gfx_deinit(void) { sg_shutdown(); }
 
 void gfx_drawstart(color_t color) {
-  quads.len = 0;
+  for (int i = 0; i < QUADS; i++) {
+    quads[i].len = 0;
+  }
   bgcol = color;
 }
 
 void gfx_drawend(void) {
-  int nverts = quads.len * VERTS_PER_QUAD;
-  sg_range range = {0};
-  range.ptr = quads.buf;
-  range.size = (size_t)nverts * VERT_SIZE * sizeof(float);
-  sg_update_buffer(buf, &range);
+#define draw(qs, b, v)                                                         \
+  {                                                                            \
+    size_t nverts = qs.len * VERTS_PER_QUAD;                                   \
+    sg_range range = {0};                                                      \
+    range.ptr = qs.buf;                                                        \
+    range.size = nverts * VERT_SIZE * sizeof(float);                           \
+    sg_update_buffer(b, &range);                                               \
+                                                                               \
+    sg_bindings bindings = {0};                                                \
+    bindings.vertex_buffers[0] = b;                                            \
+    bindings.views[VIEW_atlas] = v;                                            \
+    bindings.samplers[SMP_smp] = smp;                                          \
+                                                                               \
+    sg_apply_pipeline(pipe);                                                   \
+    sg_apply_bindings(&bindings);                                              \
+    sg_draw(0, (int)nverts, 1);                                                \
+  }
 
   sg_pass pass = {0};
   pass.swapchain = sglue_swapchain();
   pass.action.colors[0].load_action = SG_LOADACTION_CLEAR;
   pass.action.colors[0].clear_value =
       (sg_color){bgcol.r, bgcol.g, bgcol.b, bgcol.a};
-
-  sg_bindings bindings = {0};
-  bindings.vertex_buffers[0] = buf;
-  bindings.views[VIEW_atlas] = atlasview;
-  bindings.samplers[SMP_smp] = smp;
-
   sg_begin_pass(&pass);
-  sg_apply_pipeline(pipe);
-  sg_apply_bindings(&bindings);
-  sg_draw(0, nverts, 1);
+
+  // Any view would work for rectangles (we are just taking a black dot)
+  // We can just pick the first one
+  draw(quads[RECT], buf[RECT], atlasviews[0]);
+  for (int i = 0; i < FONTS; i++)
+    draw(quads[i], buf[i], atlasviews[i]);
+
   sg_end_pass();
   sg_commit();
+#undef gfx_drawquads
 }
 
 void gfx_rect(float x, float y, float w, float h, color_t col) {
-  float dpi = sapp_dpi_scale();
-  float winw = (float)sapp_width();
-  float winh = (float)sapp_height();
+  float scale = sapp_dpi_scale();
+  float winw = sapp_widthf();
+  float winh = sapp_heightf();
 
   // GPU coordinates are in NDC (normalized device coordinates) which is in the
   // -1, +1 range. The 2.0f scaling is used to map [0,1] -> [-1 +1]
-  float l = (x * dpi / winw) * 2.0f - 1.0f;
-  float r = ((x + w) * dpi / winw) * 2.0f - 1.0f;
-  float t = 1.0f - (y * dpi / winh) * 2.0f;
-  float b = 1.0f - ((y + h) * dpi / winh) * 2.0f;
+  float l = (x * scale / winw) * 2.0f - 1.0f;
+  float r = ((x + w) * scale / winw) * 2.0f - 1.0f;
+  float t = 1.0f - (y * scale / winh) * 2.0f;
+  float b = 1.0f - ((y + h) * scale / winh) * 2.0f;
 
   float quad[] = {
       // clang-format off
@@ -143,19 +169,19 @@ void gfx_rect(float x, float y, float w, float h, color_t col) {
       // clang-format on
   };
 
-  int off = quads.len * VERT_SIZE * VERTS_PER_QUAD;
-  for (int i = 0; i < VERTS_PER_QUAD * VERT_SIZE; i++)
-    quads.buf[off + i] = quad[i];
-  quads.len++;
+  size_t off = quads[RECT].len * VERT_SIZE * VERTS_PER_QUAD;
+  for (size_t i = 0; i < VERTS_PER_QUAD * VERT_SIZE; i++)
+    quads[RECT].buf[off + i] = quad[i];
+  quads[RECT].len++;
 }
 
 // Draws a glyph and return the cursor offset to draw the next one
-static float gfx_glyph(float x, float y, char c, color_t col) {
-  glyph_t g = font.glyphs[c - 32];
+static float gfx_glyph(float x, float y, char c, fonttype_t font, color_t col) {
+  glyph_t g = fonts[font].glyphs[c - 32];
 
   float scale = sapp_dpi_scale();
-  float winw = (float)sapp_width();
-  float winh = (float)sapp_height();
+  float winw = sapp_widthf();
+  float winh = sapp_heightf();
 
   // x,y are logical pixels; g.xoff/yoff are physical pixels
   // Scale cursor to physical, then add the already-physical offset
@@ -186,27 +212,27 @@ static float gfx_glyph(float x, float y, char c, color_t col) {
       // clang-format on
   };
 
-  int off = quads.len * VERT_SIZE * VERTS_PER_QUAD;
-  for (int i = 0; i < VERTS_PER_QUAD * VERT_SIZE; i++)
-    quads.buf[off + i] = quad[i];
-  quads.len++;
+  size_t off = quads[font].len * VERT_SIZE * VERTS_PER_QUAD;
+  for (size_t i = 0; i < VERTS_PER_QUAD * VERT_SIZE; i++)
+    quads[font].buf[off + i] = quad[i];
+  quads[font].len++;
 
   return g.xadvance / scale;
 }
 
-void gfx_text(float x, float y, string_t string, color_t color) {
+void gfx_text(float x, float y, string_t str, fonttype_t font, color_t color) {
   float offset = 0;
-  for (unsigned int i = 0; i < string.len; i++) {
-    offset += gfx_glyph(x + offset, y, string.buf[i], color);
+  for (size_t i = 0; i < str.len; i++) {
+    offset += gfx_glyph(x + offset, y, str.buf[i], font, color);
   }
 }
 
-void gfx_textbox(string_t string, float *w, float *h) {
+void gfx_textbox(string_t str, fonttype_t font, float *w, float *h) {
   float scale = sapp_dpi_scale();
   *w = 0;
   *h = 0;
-  for (unsigned int i = 0; i < string.len; i++) {
-    glyph_t g = font.glyphs[(unsigned char)string.buf[i] - 32];
+  for (size_t i = 0; i < str.len; i++) {
+    glyph_t g = fonts[font].glyphs[str.buf[i] - 32];
     *w += g.xadvance / scale;
     float gh = (g.y1 - g.y0) / scale;
     *h = (gh > *h) ? gh : *h;
