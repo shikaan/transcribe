@@ -3,6 +3,7 @@
 #include "../lib/sokol_app.h"
 #include "../lib/sokol_gfx.h"
 #include "../lib/sokol_glue.h"
+#include "assets/Icons.12@2x.h"
 #include "assets/InterDisplayRegular.12@2x.h"
 #include "assets/InterDisplaySemiBold.12@2x.h"
 #include "shader.h"
@@ -34,6 +35,10 @@ static font_t fonts[FONTS] = {
      .nglyphs = sizeof(bakedInterDisplaySemiBold2x),
      .bitmap = atlasInterDisplaySemiBold2x,
      .nbitmap = sizeof(atlasInterDisplaySemiBold2x)},
+    {.glyphs = (glyph_t *)bakedIcons2x,
+     .nglyphs = sizeof(bakedIcons2x),
+     .bitmap = atlasIcons2x,
+     .nbitmap = sizeof(atlasIcons2x)},
 };
 
 static sg_pipeline pipe;
@@ -113,19 +118,21 @@ void gfx_drawend(void) {
 #define draw(qs, b, v)                                                         \
   {                                                                            \
     size_t nverts = qs.len * VERTS_PER_QUAD;                                   \
-    sg_range range = {0};                                                      \
-    range.ptr = qs.buf;                                                        \
-    range.size = nverts * VERT_SIZE * sizeof(float);                           \
-    sg_update_buffer(b, &range);                                               \
+    if (nverts) {                                                              \
+      sg_range range = {0};                                                    \
+      range.ptr = qs.buf;                                                      \
+      range.size = nverts * VERT_SIZE * sizeof(float);                         \
+      sg_update_buffer(b, &range);                                             \
                                                                                \
-    sg_bindings bindings = {0};                                                \
-    bindings.vertex_buffers[0] = b;                                            \
-    bindings.views[VIEW_atlas] = v;                                            \
-    bindings.samplers[SMP_smp] = smp;                                          \
+      sg_bindings bindings = {0};                                              \
+      bindings.vertex_buffers[0] = b;                                          \
+      bindings.views[VIEW_atlas] = v;                                          \
+      bindings.samplers[SMP_smp] = smp;                                        \
                                                                                \
-    sg_apply_pipeline(pipe);                                                   \
-    sg_apply_bindings(&bindings);                                              \
-    sg_draw(0, (int)nverts, 1);                                                \
+      sg_apply_pipeline(pipe);                                                 \
+      sg_apply_bindings(&bindings);                                            \
+      sg_draw(0, (int)nverts, 1);                                              \
+    }                                                                          \
   }
 
   sg_pass pass = {0};

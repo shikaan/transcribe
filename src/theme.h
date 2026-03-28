@@ -11,13 +11,14 @@ enum {
   COLOR_FOREGROUND,
   COLOR_TEXTDIM,
   COLOR_TEXTLIGHT,
+  COLOR_PRIMARY,
+
   COLORS,
 };
 
 typedef struct {
   color_t colors[COLORS];
   float spacing;
-  // font_t fonts[FONTS];
 } theme_t;
 
 static theme_t dark = {
@@ -28,6 +29,7 @@ static theme_t dark = {
             color(0xdd, 0xdf, 0xe3, 0xff), // COLOR_FOREGROUND
             color(0x3d, 0x42, 0x4c, 0xff), // COLOR_TEXTDIM
             color(0x90, 0x96, 0xa1, 0xff), // COLOR_TEXTLIGHT
+            color(0xf3, 0xa0, 0x24, 0xff), // COLOR_PRIMARY
         },
     .spacing = 8,
 };

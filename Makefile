@@ -82,7 +82,7 @@ src/main: lib/sokol.o src/gfx.o src/ui.o | src/shader.h
 
 .PHONY: clean
 clean:
-	rm -rf src/**/*.dSYM src/**/*.o src/main
+	rm -rf src/*.dSYM src/*.o src/**/*.dSYM src/**/*.o src/main
 
 .PHONY: start
 start: src/main

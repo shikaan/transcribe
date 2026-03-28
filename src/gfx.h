@@ -11,6 +11,7 @@ enum {
 typedef enum {
   FONT_SANS,
   FONT_SANSBOLD,
+  FONT_ICONS,
 
   FONTS
 } fonttype_t;
