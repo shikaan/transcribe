@@ -5,7 +5,7 @@
 #include "../lib/sokol_glue.h"
 #include "assets/InterDisplaySemiBold.12@2x.h"
 #include "shader.h"
-#include "slice.h"
+#include "string.h"
 #include <stdio.h>
 
 typedef struct {
