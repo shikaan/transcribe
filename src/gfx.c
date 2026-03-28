@@ -3,7 +3,7 @@
 #include "../lib/sokol_app.h"
 #include "../lib/sokol_gfx.h"
 #include "../lib/sokol_glue.h"
-#include "assets/InterDisplayRegular.64.h"
+#include "assets/InterDisplaySemiBold.12@2x.h"
 #include "shader.h"
 #include "slice.h"
 #include <stdio.h>
@@ -17,10 +17,10 @@ static quads_t quads;
 static color_t bgcol;
 
 static font_t font = {
-    .glyphs = (glyph_t *)bakedInterDisplayRegular,
-    .nglyphs = sizeof(bakedInterDisplayRegular),
-    .atlas = atlasInterDisplayRegular,
-    .natlas = sizeof(atlasInterDisplayRegular),
+    .glyphs = (glyph_t *)bakedInterDisplaySemiBold2x,
+    .nglyphs = sizeof(bakedInterDisplaySemiBold2x),
+    .atlas = atlasInterDisplaySemiBold2x,
+    .natlas = sizeof(atlasInterDisplaySemiBold2x),
 };
 
 static sg_pipeline pipe;

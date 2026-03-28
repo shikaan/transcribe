@@ -1,6 +1,6 @@
 #pragma once
 
-#include "slice.h"
+#include "string.h"
 enum {
   MAX_RECTS = 1024,
   VERT_SIZE = 8,
