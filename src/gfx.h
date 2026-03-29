@@ -9,9 +9,12 @@ enum {
 };
 
 typedef enum {
-  FONT_SANS,
-  FONT_SANSBOLD,
-  FONT_ICONS,
+  FONT_SANS_M,
+  FONT_SANS_BOLD_M,
+  FONT_ICONS_M,
+  FONT_MONO_S,
+  FONT_MONO_M,
+  FONT_MONO_L,
 
   FONTS
 } fonttype_t;

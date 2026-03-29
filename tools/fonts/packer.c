@@ -5,8 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-unsigned char fontbuf[1 << 20];
-unsigned char bitmap[512 * 512];
+enum {
+  NBITMAP = 512,
+  NBITMAP2 = NBITMAP * NBITMAP,
+  NBUF = 1 << 20,
+};
+unsigned char fontbuf[NBUF];
+unsigned char bitmap[NBITMAP2];
 stbtt_bakedchar chardata[96];
 
 #define len(arr) sizeof(arr) / sizeof(arr[0])
@@ -30,12 +35,13 @@ char *filename(const char *basename) {
 }
 
 // Writes a file on disk with the same output shape as xxd -i
-void writefile(const char *outpath, const char *file, int scale, float fontsz) {
+void writefile(const char *outpath, const char *file, float pts, float nfont) {
   memset(bitmap, 0, sizeof(bitmap));
-  stbtt_BakeFontBitmap(fontbuf, 0, fontsz, bitmap, 512, 512, 32, 96, chardata);
+  stbtt_BakeFontBitmap(fontbuf, 0, nfont, bitmap, NBITMAP, NBITMAP, 32, 96,
+                       chardata);
   // This solid dot will be used to render rectangles.
   // Prevents adding a second pipeline
-  bitmap[512 * 512 - 1] = 0xFF;
+  bitmap[NBITMAP2 - 1] = 0xFF;
 
   FILE *outputfile = fopen(outpath, "w");
   assert(outputfile && "writefile: Unable to open outputfile");
@@ -46,8 +52,8 @@ void writefile(const char *outpath, const char *file, int scale, float fontsz) {
   printf("Packing a font at %s...\n", outpath);
   fprintf(outputfile,
           "#pragma once\n"
-          "_Alignas(4) unsigned char baked%s%dx[%lu] = {",
-          file, scale, bufsz);
+          "_Alignas(4) unsigned char baked%s%.0f[%lu] = {",
+          file, pts, bufsz);
   for (int i = 0; i < bufsz; i++) {
     if (i % 12 == 0) {
       fprintf(outputfile, "\n ");
@@ -56,8 +62,7 @@ void writefile(const char *outpath, const char *file, int scale, float fontsz) {
   }
   fprintf(outputfile, "\n};\n");
 
-  fprintf(outputfile, "unsigned char atlas%s%dx[%d] = {", file, scale,
-          512 * 512);
+  fprintf(outputfile, "unsigned char atlas%s%.0f[%d] = {", file, pts, NBITMAP2);
   for (int i = 0; i < len(bitmap); i++) {
     if (i % 12 == 0) {
       fprintf(outputfile, "\n ");
@@ -84,8 +89,8 @@ int main(int argc, char **argv) {
   assert(!isnan(points) && "main: Unable to parse font size");
 
   // Figma uses points at 72 DPI; convert to pixels at 96 DPI
-  float fontsz = points * (96.0f / 72.0f);
-  float fontsz2x = fontsz * 2.0f;
+  float nfont = points * (96.0f / 72.0f);
+  float nfont2x = nfont * 2.0f;
 
   char *file = filename(basename(fontpath));
   char *dir = "src/assets";
@@ -93,20 +98,20 @@ int main(int argc, char **argv) {
   FILE *fontfile = fopen(fontpath, "r");
   assert(fontfile && "main: Unable to open font file");
 
-  size_t sz = fread(fontbuf, 1, 1 << 20, fontfile);
-  assert(sz > 0 && "main: Unable to read opened font file");
+  size_t offset = fread(fontbuf, 1, NBUF, fontfile);
+  assert(offset > 0 && "main: Unable to read opened font file");
   fclose(fontfile);
 
   char outpath[256];
 
   puts("Baking font into bitmap...");
   snprintf(outpath, sizeof(outpath), "%s/%s.%.0f.h", dir, file, points);
-  writefile(outpath, file, 1, fontsz);
+  writefile(outpath, file, points, nfont);
   puts("Baking font into bitmap... OK");
 
   puts("Baking hi-res font into bitmap...");
   snprintf(outpath, sizeof(outpath), "%s/%s.%.0f@2x.h", dir, file, points);
-  writefile(outpath, file, 2, fontsz2x);
+  writefile(outpath, file, points, nfont2x);
   puts("Baking hi-res font into bitmap... OK");
 
   return 0;

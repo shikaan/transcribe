@@ -61,7 +61,7 @@ endif
 
 ###########
 
-tools/fonts/packer: CFLAGS :=
+tools/fonts/packer: CFLAGS :=-O2
 
 src/shader.h: src/shader.glsl
 	tools/sokol-tools/bin/osx_arm64/sokol-shdc \
@@ -79,6 +79,15 @@ src/gfx.o: src/gfx.c | src/shader.h
 src/main: LDFLAGS := $(SOKOL_LDFLAGS)
 src/main: CFLAGS += -D$(SOKOL_BACKEND)
 src/main: lib/sokol.o src/gfx.o src/ui.o | src/shader.h
+
+.PHONY: bake
+bake: tools/fonts/packer
+	tools/fonts/packer assets/Icons.ttf 14
+	tools/fonts/packer assets/InterDisplayRegular.ttf 14
+	tools/fonts/packer assets/InterDisplaySemiBold.ttf 14
+	tools/fonts/packer assets/JetBrainsMonoRegular.ttf 12
+	tools/fonts/packer assets/JetBrainsMonoRegular.ttf 14
+	tools/fonts/packer assets/JetBrainsMonoRegular.ttf 20
 
 .PHONY: clean
 clean:

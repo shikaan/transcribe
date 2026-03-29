@@ -3,9 +3,12 @@
 #include "../lib/sokol_app.h"
 #include "../lib/sokol_gfx.h"
 #include "../lib/sokol_glue.h"
-#include "assets/Icons.12@2x.h"
-#include "assets/InterDisplayRegular.12@2x.h"
-#include "assets/InterDisplaySemiBold.12@2x.h"
+#include "assets/Icons.14@2x.h"
+#include "assets/InterDisplayRegular.14@2x.h"
+#include "assets/InterDisplaySemiBold.14@2x.h"
+#include "assets/JetBrainsMonoRegular.12@2x.h"
+#include "assets/JetBrainsMonoRegular.14@2x.h"
+#include "assets/JetBrainsMonoRegular.20@2x.h"
 #include "shader.h"
 #include "string.h"
 #include <stddef.h>
@@ -27,19 +30,30 @@ static sg_buffer buf[QUADS];
 static color_t bgcol;
 
 static font_t fonts[FONTS] = {
-    {.glyphs = (glyph_t *)bakedInterDisplayRegular2x,
-     .nglyphs = sizeof(bakedInterDisplayRegular2x),
-     .bitmap = atlasInterDisplayRegular2x,
-     .nbitmap = sizeof(atlasInterDisplayRegular2x)},
-    {.glyphs = (glyph_t *)bakedInterDisplaySemiBold2x,
-     .nglyphs = sizeof(bakedInterDisplaySemiBold2x),
-     .bitmap = atlasInterDisplaySemiBold2x,
-     .nbitmap = sizeof(atlasInterDisplaySemiBold2x)},
-    {.glyphs = (glyph_t *)bakedIcons2x,
-     .nglyphs = sizeof(bakedIcons2x),
-     .bitmap = atlasIcons2x,
-     .nbitmap = sizeof(atlasIcons2x)},
-};
+    [FONT_SANS_M] = {.glyphs = (glyph_t *)bakedInterDisplayRegular14,
+                     .nglyphs = sizeof(bakedInterDisplayRegular14),
+                     .bitmap = atlasInterDisplayRegular14,
+                     .nbitmap = sizeof(atlasInterDisplayRegular14)},
+    [FONT_SANS_BOLD_M] = {.glyphs = (glyph_t *)bakedInterDisplaySemiBold14,
+                          .nglyphs = sizeof(bakedInterDisplaySemiBold14),
+                          .bitmap = atlasInterDisplaySemiBold14,
+                          .nbitmap = sizeof(atlasInterDisplaySemiBold14)},
+    [FONT_ICONS_M] = {.glyphs = (glyph_t *)bakedIcons14,
+                      .nglyphs = sizeof(bakedIcons14),
+                      .bitmap = atlasIcons14,
+                      .nbitmap = sizeof(atlasIcons14)},
+    [FONT_MONO_S] = {.glyphs = (glyph_t *)bakedJetBrainsMonoRegular12,
+                     .nglyphs = sizeof(bakedJetBrainsMonoRegular12),
+                     .bitmap = atlasJetBrainsMonoRegular12,
+                     .nbitmap = sizeof(atlasJetBrainsMonoRegular12)},
+    [FONT_MONO_M] = {.glyphs = (glyph_t *)bakedJetBrainsMonoRegular14,
+                     .nglyphs = sizeof(bakedJetBrainsMonoRegular14),
+                     .bitmap = atlasJetBrainsMonoRegular14,
+                     .nbitmap = sizeof(atlasJetBrainsMonoRegular14)},
+    [FONT_MONO_L] = {.glyphs = (glyph_t *)bakedJetBrainsMonoRegular20,
+                     .nglyphs = sizeof(bakedJetBrainsMonoRegular20),
+                     .bitmap = atlasJetBrainsMonoRegular20,
+                     .nbitmap = sizeof(atlasJetBrainsMonoRegular20)}};
 
 static sg_pipeline pipe;
 static sg_sampler smp;
