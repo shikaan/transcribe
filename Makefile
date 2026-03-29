@@ -80,8 +80,9 @@ src/main: LDFLAGS := $(SOKOL_LDFLAGS)
 src/main: CFLAGS += -D$(SOKOL_BACKEND)
 src/main: lib/sokol.o src/gfx.o src/ui.o | src/shader.h
 
-.PHONY: bake
-bake: tools/fonts/packer
+.PHONY: assets
+assets: tools/fonts/packer
+	rm src/assets/*
 	tools/fonts/packer assets/Icons.ttf 14
 	tools/fonts/packer assets/InterDisplayRegular.ttf 14
 	tools/fonts/packer assets/InterDisplaySemiBold.ttf 14
