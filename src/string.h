@@ -5,4 +5,4 @@ typedef struct {
   unsigned long len;
 } string_t;
 
-#define fromconst(str) {str, sizeof(str) - 1}
+#define fromconst(str) (string_t){str, sizeof(str) - 1}

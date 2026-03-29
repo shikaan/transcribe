@@ -4,6 +4,9 @@
 #include "../lib/sokol_gfx.h"
 #include "../lib/sokol_glue.h"
 #include "assets/Icons.14@2x.h"
+#include "assets/Icons.20@2x.h"
+#include "assets/Icons.32@2x.h"
+#include "assets/InterDisplayRegular.12@2x.h"
 #include "assets/InterDisplayRegular.14@2x.h"
 #include "assets/InterDisplaySemiBold.14@2x.h"
 #include "assets/JetBrainsMonoRegular.12@2x.h"
@@ -30,6 +33,10 @@ static sg_buffer buf[QUADS];
 static color_t bgcol;
 
 static font_t fonts[FONTS] = {
+    [FONT_SANS_S] = {.glyphs = (glyph_t *)bakedInterDisplayRegular12,
+                     .nglyphs = sizeof(bakedInterDisplayRegular12),
+                     .bitmap = atlasInterDisplayRegular12,
+                     .nbitmap = sizeof(atlasInterDisplayRegular12)},
     [FONT_SANS_M] = {.glyphs = (glyph_t *)bakedInterDisplayRegular14,
                      .nglyphs = sizeof(bakedInterDisplayRegular14),
                      .bitmap = atlasInterDisplayRegular14,
@@ -42,6 +49,14 @@ static font_t fonts[FONTS] = {
                       .nglyphs = sizeof(bakedIcons14),
                       .bitmap = atlasIcons14,
                       .nbitmap = sizeof(atlasIcons14)},
+    [FONT_ICONS_L] = {.glyphs = (glyph_t *)bakedIcons20,
+                      .nglyphs = sizeof(bakedIcons20),
+                      .bitmap = atlasIcons20,
+                      .nbitmap = sizeof(atlasIcons20)},
+    [FONT_ICONS_XL] = {.glyphs = (glyph_t *)bakedIcons32,
+                      .nglyphs = sizeof(bakedIcons32),
+                      .bitmap = atlasIcons32,
+                      .nbitmap = sizeof(atlasIcons32)},
     [FONT_MONO_S] = {.glyphs = (glyph_t *)bakedJetBrainsMonoRegular12,
                      .nglyphs = sizeof(bakedJetBrainsMonoRegular12),
                      .bitmap = atlasJetBrainsMonoRegular12,
@@ -241,20 +256,22 @@ static float gfx_glyph(float x, float y, char c, fonttype_t font, color_t col) {
   return g.xadvance / scale;
 }
 
-void gfx_text(float x, float y, string_t str, fonttype_t font, color_t color) {
+void gfx_text(float x, float y, string_t str, textdesc_t desc, color_t color) {
   float offset = 0;
   for (size_t i = 0; i < str.len; i++) {
-    offset += gfx_glyph(x + offset, y, str.buf[i], font, color);
+    float hspacing = i == str.len - 1 ? 0 : desc.hspacing;
+    offset += gfx_glyph(x + offset, y, str.buf[i], desc.font, color) + hspacing;
   }
 }
 
-void gfx_textbox(string_t str, fonttype_t font, float *w, float *h) {
+void gfx_textbox(string_t str, textdesc_t desc, float *w, float *h) {
   float scale = sapp_dpi_scale();
   *w = 0;
   *h = 0;
   for (size_t i = 0; i < str.len; i++) {
-    glyph_t g = fonts[font].glyphs[str.buf[i] - 32];
-    *w += g.xadvance / scale;
+    glyph_t g = fonts[desc.font].glyphs[str.buf[i] - 32];
+    float hspacing = i == str.len - 1 ? 0 : desc.hspacing;
+    *w += (g.xadvance / scale) + hspacing;
     float gh = (g.y1 - g.y0) / scale;
     *h = (gh > *h) ? gh : *h;
   }

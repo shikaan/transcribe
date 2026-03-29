@@ -9,9 +9,12 @@ enum {
 };
 
 typedef enum {
+  FONT_SANS_S,
   FONT_SANS_M,
   FONT_SANS_BOLD_M,
   FONT_ICONS_M,
+  FONT_ICONS_L,
+  FONT_ICONS_XL,
   FONT_MONO_S,
   FONT_MONO_M,
   FONT_MONO_L,
@@ -36,11 +39,16 @@ typedef struct {
   unsigned int nbitmap;
 } font_t;
 
+typedef struct {
+  fonttype_t font;
+  float hspacing;
+} textdesc_t;
+
 void gfx_init(void);
 void gfx_deinit(void);
 void gfx_drawstart(color_t bg);
 void gfx_drawend(void);
 
 void gfx_rect(float x, float y, float w, float h, color_t col);
-void gfx_text(float x, float y, string_t string, fonttype_t font, color_t col);
-void gfx_textbox(string_t string, fonttype_t font, float *w, float *h);
+void gfx_text(float x, float y, string_t string, textdesc_t desc, color_t col);
+void gfx_textbox(string_t string, textdesc_t desc, float *w, float *h);

@@ -16,6 +16,7 @@ static void frame(void) {
   ui_titlebar();
   ui_timeline();
   ui_spectrum();
+  ui_controls();
   gfx_drawend();
 }
 

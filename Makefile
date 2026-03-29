@@ -84,6 +84,9 @@ src/main: lib/sokol.o src/gfx.o src/ui.o | src/shader.h
 assets: tools/fonts/packer
 	rm src/assets/*
 	tools/fonts/packer assets/Icons.ttf 14
+	tools/fonts/packer assets/Icons.ttf 20
+	tools/fonts/packer assets/Icons.ttf 32
+	tools/fonts/packer assets/InterDisplayRegular.ttf 12
 	tools/fonts/packer assets/InterDisplayRegular.ttf 14
 	tools/fonts/packer assets/InterDisplaySemiBold.ttf 14
 	tools/fonts/packer assets/JetBrainsMonoRegular.ttf 12

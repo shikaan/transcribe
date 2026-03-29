@@ -49,7 +49,7 @@ void writefile(const char *outpath, const char *file, float pts, float nfont) {
   unsigned char *asbuf = (unsigned char *)chardata;
   size_t bufsz = sizeof(chardata);
 
-  printf("Packing a font at %s...\n", outpath);
+  printf("Packing font at %s...\n", outpath);
   fprintf(outputfile,
           "#pragma once\n"
           "_Alignas(4) unsigned char baked%s%.0f[%lu] = {",
@@ -70,7 +70,7 @@ void writefile(const char *outpath, const char *file, float pts, float nfont) {
     fprintf(outputfile, " 0x%02x,", bitmap[i]);
   }
   fprintf(outputfile, "\n};\n");
-  printf("Packing a font at %s... OK\n", outpath);
+  printf("Packing font at %s... OK\n", outpath);
 
   fclose(outputfile);
 }
