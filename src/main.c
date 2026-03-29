@@ -6,13 +6,19 @@
 #include "theme.h"
 #include "ui.h"
 
-static void init(void) { gfx_init(); }
+static void init(void) {
+  gfx_init();
+  ui_init();
+}
+
 static void frame(void) {
-  gfx_drawstart(theme->colors[COLOR_BACKGROUND]);
+  gfx_drawstart(theme->colors[COLOR_BG]);
   ui_titlebar();
   ui_timeline();
+  ui_spectrum();
   gfx_drawend();
 }
+
 static void cleanup(void) { gfx_deinit(); }
 
 sapp_desc sokol_main(int argc, char *argv[]) {
@@ -23,8 +29,8 @@ sapp_desc sokol_main(int argc, char *argv[]) {
       .frame_cb = frame,
       .cleanup_cb = cleanup,
       .window_title = "Transcribling",
-      .width = 800,
-      .height = 600,
+      .width = 1024,
+      .height = 768,
       .high_dpi = true,
   };
 }
