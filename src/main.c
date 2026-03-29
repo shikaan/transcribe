@@ -10,6 +10,7 @@ static void init(void) { gfx_init(); }
 static void frame(void) {
   gfx_drawstart(theme->colors[COLOR_BACKGROUND]);
   ui_titlebar();
+  ui_timeline();
   gfx_drawend();
 }
 static void cleanup(void) { gfx_deinit(); }
