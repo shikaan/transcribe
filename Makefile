@@ -105,3 +105,7 @@ clean:
 .PHONY: start
 start: src/main
 	src/main
+
+.PHONY: config
+config:
+	compiledb make
