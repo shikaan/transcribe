@@ -1,8 +1,10 @@
+#include <assert.h>
+#include <miniaudio.h>
 #include <stdio.h>
 #include <string.h>
+#include <sokol_app.h>
 
-#include "../lib/sokol_app.h"
-#include "gfx.h"
+#include "gfx/gfx.h"
 #include "theme.h"
 #include "ui.h"
 
@@ -26,6 +28,7 @@ static void cleanup(void) { gfx_deinit(); }
 sapp_desc sokol_main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
+
   return (sapp_desc){
       .init_cb = init,
       .frame_cb = frame,

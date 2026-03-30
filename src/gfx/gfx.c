@@ -1,8 +1,10 @@
 #include "gfx.h"
 
-#include "../lib/sokol_app.h"
-#include "../lib/sokol_gfx.h"
-#include "../lib/sokol_glue.h"
+#include <sokol_app.h>
+#include <sokol_gfx.h>
+#include <sokol_glue.h>
+
+#include "shader.h"
 #include "assets/Icons.14@2x.h"
 #include "assets/Icons.20@2x.h"
 #include "assets/Icons.32@2x.h"
@@ -12,7 +14,6 @@
 #include "assets/JetBrainsMonoRegular.12@2x.h"
 #include "assets/JetBrainsMonoRegular.14@2x.h"
 #include "assets/JetBrainsMonoRegular.20@2x.h"
-#include "shader.h"
 #include "string.h"
 #include <stddef.h>
 #include <stdio.h>
@@ -54,9 +55,9 @@ static font_t fonts[FONTS] = {
                       .bitmap = atlasIcons20,
                       .nbitmap = sizeof(atlasIcons20)},
     [FONT_ICONS_XL] = {.glyphs = (glyph_t *)bakedIcons32,
-                      .nglyphs = sizeof(bakedIcons32),
-                      .bitmap = atlasIcons32,
-                      .nbitmap = sizeof(atlasIcons32)},
+                       .nglyphs = sizeof(bakedIcons32),
+                       .bitmap = atlasIcons32,
+                       .nbitmap = sizeof(atlasIcons32)},
     [FONT_MONO_S] = {.glyphs = (glyph_t *)bakedJetBrainsMonoRegular12,
                      .nglyphs = sizeof(bakedJetBrainsMonoRegular12),
                      .bitmap = atlasJetBrainsMonoRegular12,

@@ -1,8 +1,8 @@
 #include "ui.h"
-#include "../lib/sokol_app.h"
-#include "gfx.h"
+#include "gfx/gfx.h"
 #include "string.h"
 #include "theme.h"
+#include <sokol_app.h>
 #include <stdlib.h>
 #include <time.h>
 

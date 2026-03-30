@@ -27,7 +27,8 @@ COMMON_CFLAGS := -std=c11 \
 	-Wswitch-enum \
 	-Wconversion \
 	-Wno-ignored-qualifiers \
-	-Wno-aggregate-return
+	-Wno-aggregate-return \
+	-I vnd -I src
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
@@ -61,7 +62,15 @@ endif
 
 ###########
 
+all: src/main
+
 tools/fonts/packer: CFLAGS :=-O2
+
+vnd/sokol.o: CFLAGS := -D$(SOKOL_BACKEND) -O2
+vnd/sokol.o: vnd/sokol.m
+	$(SOKOL_CC) $(CFLAGS) -c $< -o $@
+
+vnd/miniaudio.o: CFLAGS :=-O2
 
 src/shader.h: src/shader.glsl
 	tools/sokol-tools/bin/osx_arm64/sokol-shdc \
@@ -69,16 +78,12 @@ src/shader.h: src/shader.glsl
 	--output $@ \
 	-l metal_macos
 
-lib/sokol.o: CFLAGS := -D$(SOKOL_BACKEND) -O2
-lib/sokol.o: lib/sokol.m
-	$(SOKOL_CC) $(CFLAGS) -c $< -o $@
-
-src/gfx.o: CFLAGS += -D$(SOKOL_BACKEND)
-src/gfx.o: src/gfx.c | src/shader.h
+src/gfx/gfx.o: CFLAGS += -D$(SOKOL_BACKEND)
+src/gfx/gfx.o: src/gfx/gfx.c | src/gfx/shader.h
 
 src/main: LDFLAGS := $(SOKOL_LDFLAGS)
 src/main: CFLAGS += -D$(SOKOL_BACKEND)
-src/main: lib/sokol.o src/gfx.o src/ui.o | src/shader.h
+src/main: vnd/sokol.o vnd/miniaudio.o src/gfx/gfx.o src/ui.o | src/gfx/shader.h
 
 .PHONY: assets
 assets: tools/fonts/packer

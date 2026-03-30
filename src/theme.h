@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gfx.h"
+#include "gfx/gfx.h"
 
 #define color(r, g, b, a)                                                      \
   {(float)r / 0xff, (float)g / 0xff, (float)b / 0xff, (float)a / 0xff}

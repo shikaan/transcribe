@@ -8,6 +8,10 @@ tools/fonts/packer
 
 # editor files
 .zed
+.cache
+compile_commands.json
 
+# random
 .todo
 .DS_Store
+*.mp3
