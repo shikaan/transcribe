@@ -1,6 +1,6 @@
 #include "ui.h"
 #include "gfx/gfx.h"
-#include "string.h"
+#include "str.h"
 #include "theme.h"
 #include <sokol_app.h>
 #include <stdlib.h>

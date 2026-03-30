@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../string.h"
+#include "../str.h"
 
 enum {
   MAX_QUADS = 1024,
