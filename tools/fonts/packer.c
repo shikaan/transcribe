@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
   float nfont2x = nfont * 2.0f;
 
   char *file = filename(basename(fontpath));
-  char *dir = "src/assets";
+  char *dir = "src/gfx/fonts";
 
   FILE *fontfile = fopen(fontpath, "r");
   assert(fontfile && "main: Unable to open font file");

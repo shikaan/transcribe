@@ -4,16 +4,16 @@
 #include <sokol_gfx.h>
 #include <sokol_glue.h>
 
+#include "fonts/Icons.14@2x.h"
+#include "fonts/Icons.20@2x.h"
+#include "fonts/Icons.32@2x.h"
+#include "fonts/InterDisplayRegular.12@2x.h"
+#include "fonts/InterDisplayRegular.14@2x.h"
+#include "fonts/InterDisplaySemiBold.14@2x.h"
+#include "fonts/JetBrainsMonoRegular.12@2x.h"
+#include "fonts/JetBrainsMonoRegular.14@2x.h"
+#include "fonts/JetBrainsMonoRegular.20@2x.h"
 #include "shader.h"
-#include "assets/Icons.14@2x.h"
-#include "assets/Icons.20@2x.h"
-#include "assets/Icons.32@2x.h"
-#include "assets/InterDisplayRegular.12@2x.h"
-#include "assets/InterDisplayRegular.14@2x.h"
-#include "assets/InterDisplaySemiBold.14@2x.h"
-#include "assets/JetBrainsMonoRegular.12@2x.h"
-#include "assets/JetBrainsMonoRegular.14@2x.h"
-#include "assets/JetBrainsMonoRegular.20@2x.h"
 #include "string.h"
 #include <stddef.h>
 #include <stdio.h>
