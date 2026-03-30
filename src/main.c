@@ -17,6 +17,7 @@ static void frame(void) {
   ui_timeline();
   ui_spectrum();
   ui_controls();
+  ui_playhead();
   gfx_drawend();
 }
 

@@ -9,7 +9,7 @@
 enum {
   TITLEBARH = 6,
   TIMELINEH = 4,
-  SPECTRUM_H = 10,
+  SPECTRUM_H = 32,
   BARPADX = 3,
 
   NSAMPLES = 1024
@@ -140,7 +140,7 @@ void ui_spectrum(void) {
   const float scale = sapp_dpi_scale();
   const float winw = sapp_widthf() / scale;
   const float topbary = theme->spacing * (TITLEBARH + TIMELINEH);
-  const float height = theme->spacing * 32;
+  const float height = theme->spacing * SPECTRUM_H;
 
   const float barw = theme->spacing / 2;
   const float barmaxh = height - theme->spacing;
@@ -229,13 +229,25 @@ void ui_controls(void) {
   string_t loop = fromconst("h");
   btndesc.font = FONT_ICONS_L;
   gfx_textbox(loop, btndesc, &txtw, &txth);
-  gfx_text(winw / 2 + playw / 2 + spacebetween,
-           y + height / 2 + txth / 2, loop, btndesc,
-           theme->colors[COLOR_TEXTHIGHLIGHT]);
+  gfx_text(winw / 2 + playw / 2 + spacebetween, y + height / 2 + txth / 2, loop,
+           btndesc, theme->colors[COLOR_TEXTHIGHLIGHT]);
 
   string_t stop = fromconst("k");
   btndesc.font = FONT_ICONS_L;
   gfx_text(winw / 2 - playw / 2 - txtw - spacebetween,
            y + height / 2 + txth / 2, stop, btndesc,
            theme->colors[COLOR_TEXTHIGHLIGHT]);
+}
+
+void ui_playhead(void) {
+  const float y = theme->spacing * (TITLEBARH + TIMELINEH);
+  const float height = theme->spacing * SPECTRUM_H;
+  const float head = theme->spacing;
+  const float thickness = theme->spacing / 4;
+
+  float x = 100;
+
+  gfx_rect(x - head / 2 + thickness / 2, y, head, head,
+           theme->colors[COLOR_PRIMARY]);
+  gfx_rect(x, y, thickness, height, theme->colors[COLOR_PRIMARY]);
 }
