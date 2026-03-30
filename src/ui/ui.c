@@ -6,14 +6,12 @@
 #include <stdlib.h>
 #include <time.h>
 
-enum {
-  TITLEBARH = 6,
-  TIMELINEH = 4,
-  SPECTRUM_H = 32,
-  BARPADX = 3,
+const float TITLEBARH = 6;
+const float TIMELINEH = 4;
+const float SPECTRUM_H = 32;
+const float BARPADX = 3;
 
-  NSAMPLES = 1024
-};
+enum { NSAMPLES = 1024 };
 
 typedef enum {
   LINEDIR_H,

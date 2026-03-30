@@ -83,7 +83,7 @@ src/gfx/gfx.o: src/gfx/gfx.c | src/gfx/shader.h
 
 src/main: LDFLAGS := $(SOKOL_LDFLAGS)
 src/main: CFLAGS += -D$(SOKOL_BACKEND)
-src/main: vnd/sokol.o vnd/miniaudio.o src/gfx/gfx.o src/ui.o | src/gfx/shader.h
+src/main: vnd/sokol.o vnd/miniaudio.o src/gfx/gfx.o src/ui/ui.o | src/gfx/shader.h
 
 .PHONY: assets
 assets: tools/fonts/packer

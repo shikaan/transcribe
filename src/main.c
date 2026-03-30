@@ -1,12 +1,11 @@
 #include <assert.h>
 #include <miniaudio.h>
 #include <stdio.h>
-#include <string.h>
 #include <sokol_app.h>
 
 #include "gfx/gfx.h"
-#include "theme.h"
-#include "ui.h"
+#include "ui/theme.h"
+#include "ui/ui.h"
 
 static void init(void) {
   gfx_init();
