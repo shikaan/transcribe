@@ -1,8 +1,11 @@
 #include "gfx.h"
 
+#include <assert.h>
 #include <sokol_app.h>
 #include <sokol_gfx.h>
 #include <sokol_glue.h>
+#include <stddef.h>
+#include <stdio.h>
 
 #include "fonts/Icons.14@2x.h"
 #include "fonts/Icons.20@2x.h"
@@ -15,8 +18,6 @@
 #include "fonts/JetBrainsMonoRegular.20@2x.h"
 #include "shader.h"
 #include "string.h"
-#include <stddef.h>
-#include <stdio.h>
 
 enum {
   QUADS = FONTS + 1, // a buffer per font and one for rects
@@ -180,7 +181,7 @@ void gfx_drawend(void) {
 
   sg_end_pass();
   sg_commit();
-#undef gfx_drawquads
+#undef draw
 }
 
 void gfx_rect(float x, float y, float w, float h, color_t col) {
@@ -268,12 +269,36 @@ void gfx_text(float x, float y, string_t str, textdesc_t desc, color_t color) {
 void gfx_textbox(string_t str, textdesc_t desc, float *w, float *h) {
   float scale = sapp_dpi_scale();
   *w = 0;
-  *h = 0;
+  float top = 0;
+  float bot = 0;
   for (size_t i = 0; i < str.len; i++) {
     glyph_t g = fonts[desc.font].glyphs[str.buf[i] - 32];
     float hspacing = i == str.len - 1 ? 0 : desc.hspacing;
     *w += (g.xadvance / scale) + hspacing;
-    float gh = (g.y1 - g.y0) / scale;
-    *h = (gh > *h) ? gh : *h;
+    float gtop = g.yoff / scale;
+    float gbot = (g.yoff + (g.y1 - g.y0)) / scale;
+    if (gtop < top) top = gtop;
+    if (gbot > bot) bot = gbot;
   }
+  *h = bot - top;
+}
+
+color_t gfx_darken(color_t c, float amount) {
+  assert(amount >= 0 && amount <= 1.0f && "percentage should be in [0,1]");
+  return (color_t){
+      c.r * (1 - amount),
+      c.g * (1 - amount),
+      c.b * (1 - amount),
+      c.a,
+  };
+}
+
+color_t gfx_lighten(color_t c, float amount) {
+  assert(amount >= 0 && amount <= 1.0f && "percentage should be in [0,1]");
+  return (color_t){
+      c.r + (1 - c.r) * amount,
+      c.g + (1 - c.g) * amount,
+      c.b + (1 - c.b) * amount,
+      c.a,
+  };
 }

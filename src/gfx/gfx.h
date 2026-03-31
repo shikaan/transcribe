@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../str.h"
+#include "../types.h"
 
 enum {
   MAX_QUADS = 1024,
@@ -52,3 +52,6 @@ void gfx_drawend(void);
 void gfx_rect(float x, float y, float w, float h, color_t col);
 void gfx_text(float x, float y, string_t string, textdesc_t desc, color_t col);
 void gfx_textbox(string_t string, textdesc_t desc, float *w, float *h);
+
+color_t gfx_darken(color_t c, float f);
+color_t gfx_lighten(color_t c, float f);

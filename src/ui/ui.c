@@ -1,9 +1,13 @@
 #include "ui.h"
+#include "audio/audio.h"
 #include "gfx/gfx.h"
-#include "str.h"
+#include "input/input.h"
 #include "theme.h"
+#include "types.h"
 #include <sokol_app.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 const float TITLEBARH = 6;
@@ -22,6 +26,75 @@ static void ui_line(float x0, float y0, float len, linedir_t dir, color_t col) {
   const float thickness = 1;
   gfx_rect(x0, y0, dir == LINEDIR_V ? thickness : len,
            dir == LINEDIR_V ? len : thickness, col);
+}
+
+static bool overlaps(float rx, float ry, float rw, float rh, float px,
+                     float py) {
+  return px >= rx && px <= rx + rw && py >= ry && py <= ry + rh;
+}
+
+typedef struct {
+  string_t label;
+  fonttype_t font;
+  void (*onclick)(void); // FIXME: this should take input_t
+  color_t background;
+  color_t foreground;
+  // FIXME: this is needed just because I cannot align - in inputs
+  //        it's likely going to break somewhere else too if we don't understand
+  //        how to properly center text vertically
+  float pady;
+} icobtndesc_t;
+
+// FIXME: if this becomes a performance issue, we could precompute the colors
+//        instead of doing it on every frame
+static void ui_btn(float x, float y, float w, float h, icobtndesc_t desc) {
+  float txtw, txth;
+  textdesc_t btndesc = {desc.font, 0};
+  gfx_textbox(desc.label, btndesc, &txtw, &txth);
+
+  color_t background = desc.background;
+  if (overlaps(x, y, w, h, input.mousex, input.mousey)) {
+    background = input.down ? gfx_lighten(background, 0.08f)
+                            : gfx_lighten(background, 0.15f);
+
+    if (input.clicked && desc.onclick)
+      desc.onclick();
+  }
+
+  gfx_rect(x, y, w, h, background);
+  gfx_text(x + w / 2 - txtw / 2, y + h / 2 + txth / 2 + desc.pady, desc.label,
+           btndesc, desc.foreground);
+}
+
+static void ui_number(float x, float y, float w, float h, string_t label,
+                      string_t value) {
+  float txtw, txth;
+  textdesc_t ldesc = {FONT_SANS_S, 2.5f};
+  gfx_textbox(label, ldesc, &txtw, &txth);
+  gfx_text(x + w / 2 - txtw / 2, y + txth, label, ldesc,
+           theme->colors[COLOR_TEXTLIGHT]);
+
+  textdesc_t vdesc = {FONT_MONO_M, 0};
+  gfx_textbox(value, vdesc, &txtw, &txth);
+  gfx_text(x + w / 2 - txtw / 2, y + h - txth / 2, value, vdesc,
+           theme->colors[COLOR_TEXTLIGHT]);
+
+  const float icosz = theme->spacing * 3;
+
+  ui_btn(x, y + h - icosz, icosz, icosz,
+         (icobtndesc_t){.font = FONT_ICONS_M,
+                        .label = fromconst(ICON_MINUS),
+                        .background = theme->colors[COLOR_BARBG],
+                        .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
+                        .pady = 4.0f});
+
+  ui_btn(x + w - icosz, y + h - icosz, icosz, icosz,
+         (icobtndesc_t){
+             .font = FONT_ICONS_M,
+             .label = fromconst(ICON_PLUS),
+             .background = theme->colors[COLOR_BARBG],
+             .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
+         });
 }
 
 float samples[NSAMPLES] = {0};
@@ -63,7 +136,7 @@ void ui_titlebar(void) {
   ui_line(currentx, height / 2 - sepheight / 2, sepheight, LINEDIR_V,
           theme->colors[COLOR_TEXTDIM]);
 
-  string_t openicon = fromconst("a");
+  string_t openicon = fromconst(ICON_OPEN);
   desc.font = FONT_ICONS_M;
   gfx_textbox(openicon, desc, &txtw, &txth);
   currentx += spacebetween;
@@ -81,7 +154,7 @@ void ui_titlebar(void) {
   ui_line(currentx, height / 2 - sepheight / 2, sepheight, LINEDIR_V,
           theme->colors[COLOR_TEXTDIM]);
 
-  string_t fileicon = fromconst("b");
+  string_t fileicon = fromconst(ICON_FILE);
   desc.font = FONT_ICONS_M;
   gfx_textbox(fileicon, desc, &txtw, &txth);
   currentx += spacebetween;
@@ -95,7 +168,7 @@ void ui_titlebar(void) {
   gfx_text(currentx, height / 2 + txth / 2, file, desc,
            theme->colors[COLOR_TEXTLIGHT]);
 
-  string_t settingsicon = fromconst("m");
+  string_t settingsicon = fromconst(ICON_EQ);
   desc.font = FONT_ICONS_M;
   gfx_textbox(settingsicon, desc, &txtw, &txth);
   gfx_text(winw - txtw - padx, height / 2 + txth / 2, settingsicon, desc,
@@ -155,30 +228,6 @@ void ui_spectrum(void) {
   }
 }
 
-static void ui_number(float x, float y, float w, float h, string_t label,
-                      string_t value) {
-  float txtw, txth, icow, icoh;
-  textdesc_t ldesc = {FONT_SANS_S, 2.5f};
-  gfx_textbox(label, ldesc, &txtw, &txth);
-  gfx_text(x + w / 2 - txtw / 2, y + txth, label, ldesc,
-           theme->colors[COLOR_TEXTLIGHT]);
-
-  textdesc_t vdesc = {FONT_MONO_M, 0};
-  gfx_textbox(value, vdesc, &txtw, &txth);
-  gfx_text(x + w / 2 - txtw / 2, y + h - txth / 2, value, vdesc,
-           theme->colors[COLOR_TEXTLIGHT]);
-
-  textdesc_t idesc = {FONT_ICONS_M, 0};
-  string_t plus = fromconst("d");
-  gfx_textbox(plus, idesc, &icow, &icoh);
-  gfx_text(x, y + h - icoh / 4, plus, idesc,
-           theme->colors[COLOR_TEXTHIGHLIGHT]);
-
-  string_t minus = fromconst("e");
-  gfx_text(x + w - icow, y + h - icoh / 4, minus, idesc,
-           theme->colors[COLOR_TEXTHIGHLIGHT]);
-}
-
 void ui_controls(void) {
   const float scale = sapp_dpi_scale();
   const float winw = sapp_widthf() / scale;
@@ -204,9 +253,9 @@ void ui_controls(void) {
   gfx_text(currentx, y + height / 2 + txth / 2, timecode, desc,
            theme->colors[COLOR_TEXTLIGHT]);
 
-  const float numberh = theme->spacing * 6;
-  const float numberw = theme->spacing * 12;
-  const float spacebetween = theme->spacing * 4;
+  const float numberh = theme->spacing * 5;
+  const float numberw = theme->spacing * 14;
+  float spacebetween = theme->spacing * 4;
 
   currentx = winw - padx - numberw;
   ui_number(currentx, winh - (height + numberh) / 2, numberw, numberh,
@@ -216,25 +265,52 @@ void ui_controls(void) {
   ui_number(currentx, winh - (height + numberh) / 2, numberw, numberh,
             fromconst("TEMPO"), fromconst("100%"));
 
-  string_t play = fromconst("i");
-  textdesc_t btndesc = {FONT_ICONS_XL, 0};
-  gfx_textbox(play, btndesc, &txtw, &txth);
-  const float playw = txtw;
-  const float playx = winw / 2 - playw / 2;
-  gfx_text(playx, y + height / 2 + txth / 2, play, btndesc,
-           theme->colors[COLOR_TEXTHIGHLIGHT]);
+  const float primarybtnw = 64;
+  const float primarybtnh = 64;
+  const float secondarybtnw = 48;
+  const float secondarybtnh = 48;
+  spacebetween = theme->spacing * 2;
 
-  string_t loop = fromconst("h");
-  btndesc.font = FONT_ICONS_L;
-  gfx_textbox(loop, btndesc, &txtw, &txth);
-  gfx_text(winw / 2 + playw / 2 + spacebetween, y + height / 2 + txth / 2, loop,
-           btndesc, theme->colors[COLOR_TEXTHIGHLIGHT]);
+  if (!audio_isplaying()) {
+    ui_btn(winw / 2 - primarybtnw / 2, y + height / 2 - primarybtnh / 2,
+           primarybtnw, primarybtnh,
+           (icobtndesc_t){
+               .font = FONT_ICONS_XL,
+               .label = fromconst(ICON_PLAY),
+               .onclick = audio_play,
+               .background = theme->colors[COLOR_BARBG],
+               .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
+           });
+  } else {
+    ui_btn(winw / 2 - primarybtnw / 2, y + height / 2 - primarybtnh / 2,
+           primarybtnw, primarybtnh,
+           (icobtndesc_t){
+               .font = FONT_ICONS_XL,
+               .label = fromconst(ICON_PAUSE),
+               .onclick = audio_pause,
+               .background = theme->colors[COLOR_BARBG],
+               .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
+           });
+  }
 
-  string_t stop = fromconst("k");
-  btndesc.font = FONT_ICONS_L;
-  gfx_text(winw / 2 - playw / 2 - txtw - spacebetween,
-           y + height / 2 + txth / 2, stop, btndesc,
-           theme->colors[COLOR_TEXTHIGHLIGHT]);
+  ui_btn(winw / 2 + primarybtnw / 2 + spacebetween,
+         y + height / 2 - secondarybtnh / 2, secondarybtnw, secondarybtnh,
+         (icobtndesc_t){
+             .font = FONT_ICONS_L,
+             .label = fromconst(ICON_LOOP),
+             .background = theme->colors[COLOR_BARBG],
+             .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
+         });
+
+  ui_btn(winw / 2 - primarybtnw / 2 - secondarybtnw - spacebetween,
+         y + height / 2 - secondarybtnh / 2, secondarybtnw, secondarybtnh,
+         (icobtndesc_t){
+             .font = FONT_ICONS_L,
+             .label = fromconst(ICON_STOP),
+             .onclick = audio_stop,
+             .background = theme->colors[COLOR_BARBG],
+             .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
+         });
 }
 
 void ui_playhead(void) {

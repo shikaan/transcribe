@@ -1,25 +1,30 @@
 #include <assert.h>
-#include <miniaudio.h>
-#include <stdio.h>
 #include <sokol_app.h>
+#include <stdio.h>
 
+#include "audio/audio.h"
 #include "gfx/gfx.h"
+#include "input/input.h"
 #include "ui/theme.h"
 #include "ui/ui.h"
 
 static void init(void) {
+  // FIXME: use file open instead
+  audio_open("test.mp3");
   gfx_init();
   ui_init();
 }
 
 static void frame(void) {
-  gfx_drawstart(theme->colors[COLOR_BG]);
+  // FIXME: inject inputs instead of reading from gloabl for testability
+  gfx_drawstart(theme->colors[COLOR_BACKGROUND]);
   ui_titlebar();
   ui_timeline();
   ui_spectrum();
   ui_controls();
   ui_playhead();
   gfx_drawend();
+  input_done();
 }
 
 static void cleanup(void) { gfx_deinit(); }
@@ -27,14 +32,12 @@ static void cleanup(void) { gfx_deinit(); }
 sapp_desc sokol_main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
-
-  return (sapp_desc){
-      .init_cb = init,
-      .frame_cb = frame,
-      .cleanup_cb = cleanup,
-      .window_title = "Transcribling",
-      .width = 1024,
-      .height = 768,
-      .high_dpi = true,
-  };
+  return (sapp_desc){.init_cb = init,
+                     .frame_cb = frame,
+                     .cleanup_cb = cleanup,
+                     .event_cb = input_event,
+                     .window_title = "Transcribling",
+                     .width = 1024,
+                     .height = 768,
+                     .high_dpi = true};
 }
