@@ -1,6 +1,6 @@
 #include "prof.h"
 
-#ifdef NDEBUG
+#ifndef NDEBUG
 #include <mach/mach_time.h>
 #include <stddef.h>
 #include <stdio.h>

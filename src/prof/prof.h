@@ -1,8 +1,6 @@
 #pragma once
 
-#define NDEBUG
-
-#ifdef NDEBUG
+#ifndef NDEBUG
 typedef unsigned long segment_t;
 segment_t prof_segstart(const char *label);
 void prof_segend(segment_t seg);
