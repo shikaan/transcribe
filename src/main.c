@@ -5,14 +5,14 @@
 #include "audio/audio.h"
 #include "gfx/gfx.h"
 #include "input/input.h"
+#include "prof/prof.h"
 #include "ui/theme.h"
 #include "ui/ui.h"
 
 static void init(void) {
   // FIXME: use file open instead
-  audio_open("test.mp3");
+  audio_open("/Users/manuel/dev/shikaan/transcriptions/test1.mp3");
   gfx_init();
-  ui_init();
 }
 
 static void frame(void) {
@@ -27,7 +27,10 @@ static void frame(void) {
   input_done();
 }
 
-static void cleanup(void) { gfx_deinit(); }
+static void cleanup(void) {
+  gfx_deinit();
+  prof_print();
+}
 
 sapp_desc sokol_main(int argc, char *argv[]) {
   (void)argc;

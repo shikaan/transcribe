@@ -84,7 +84,7 @@ src/gfx/gfx.o: src/gfx/gfx.c | src/gfx/shader.h
 src/main: LDFLAGS := $(SOKOL_LDFLAGS)
 src/main: CFLAGS += -D$(SOKOL_BACKEND)
 src/main: vnd/sokol.o vnd/miniaudio.o \
-	src/gfx/gfx.o src/ui/ui.o src/audio/audio.o src/input/input.o \
+	src/gfx/gfx.o src/ui/ui.o src/audio/audio.o src/input/input.o src/prof/prof.o \
 	| src/gfx/shader.h
 
 .PHONY: assets

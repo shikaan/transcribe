@@ -13,5 +13,6 @@ typedef enum {
 
   ERR_AUDIO = -100,
   ERR_AUDIO_INIT = -101,
-  ERR_AUDIO_OPENFILE = -102
+  ERR_AUDIO_OPENFILE = -102,
+  ERR_AUDIO_DECODE = -103
 } result_t;

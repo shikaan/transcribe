@@ -15,8 +15,6 @@ const float TIMELINEH = 4;
 const float SPECTRUM_H = 32;
 const float BARPADX = 3;
 
-enum { NSAMPLES = 1024 };
-
 typedef enum {
   LINEDIR_H,
   LINEDIR_V,
@@ -95,14 +93,6 @@ static void ui_number(float x, float y, float w, float h, string_t label,
              .background = theme->colors[COLOR_BARBG],
              .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
          });
-}
-
-float samples[NSAMPLES] = {0};
-void ui_init(void) {
-  srand((unsigned)time(NULL));
-  for (int i = 0; i < NSAMPLES; i++) {
-    samples[i] = (float)rand() / RAND_MAX;
-  }
 }
 
 void ui_titlebar(void) {
@@ -214,15 +204,17 @@ void ui_spectrum(void) {
   const float height = theme->spacing * SPECTRUM_H;
 
   const float barw = theme->spacing / 2;
-  const float barmaxh = height - theme->spacing;
+  const float barminh = theme->spacing / 2;
+  const float barmaxh = height - theme->spacing - barminh;
   const float bargap = theme->spacing / 4;
 
   gfx_rect(0, topbary, winw, height, theme->colors[COLOR_SPECTRUMBG]);
 
-  int i = 0;
+  unsigned int i = 0;
   float x = 0;
-  for (; x < winw && i < NSAMPLES; x += barw + bargap, i++) {
-    float barh = barmaxh * samples[i];
+  samples_t *samples = audio_getsamples();
+  for (; x < winw && i < samples->len; x += barw + bargap, i++) {
+    float barh = barmaxh * samples->buf[i] + barminh;
     gfx_rect(x, topbary + (height - barh) / 2, barw, barh,
              theme->colors[COLOR_TEXTLIGHT]);
   }
