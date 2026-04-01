@@ -212,7 +212,7 @@ void ui_spectrum(void) {
 
   unsigned int i = 0;
   float x = 0;
-  samples_t *samples = audio_getsamples();
+  samples_t *samples = audio_samples();
   for (; x < winw && i < samples->len; x += barw + bargap, i++) {
     float barh = barmaxh * samples->buf[i] + barminh;
     gfx_rect(x, topbary + (height - barh) / 2, barw, barh,
@@ -229,17 +229,23 @@ void ui_controls(void) {
   const float y = winh - height;
 
   float txtw, txth, currentx = 0.0f;
+  float total, current;
+  audio_times(&total, &current);
 
   gfx_rect(0, y, winw, height, theme->colors[COLOR_BARBG]);
 
-  string_t timecodenow = fromconst("01:23.456");
+  static char timecodebuf[10] = "00:00.000";
+  static string_t timecode = {timecodebuf, 9};
+  audio_sectotime(current, timecodebuf);
+
   currentx += padx;
   textdesc_t desc = {FONT_MONO_L, 0};
-  gfx_textbox(timecodenow, desc, &txtw, &txth);
-  gfx_text(currentx, y + height / 2 + txth / 2, timecodenow, desc,
+  gfx_textbox(timecode, desc, &txtw, &txth);
+  gfx_text(currentx, y + height / 2 + txth / 2, timecode, desc,
            theme->colors[COLOR_TEXTHIGHLIGHT]);
 
-  string_t timecode = fromconst("01:23.456");
+  audio_sectotime(total, timecodebuf);
+
   currentx += txtw + theme->spacing * 2;
   desc.font = FONT_MONO_M;
   gfx_text(currentx, y + height / 2 + txth / 2, timecode, desc,

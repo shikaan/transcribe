@@ -1,10 +1,10 @@
 #include "audio.h"
 #include "miniaudio.h"
-#include "prof/prof.h"
 #include "types.h"
 #include <assert.h>
 #include <math.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -15,7 +15,7 @@ static ma_sound sound;
 const ma_uint64 framespersample = 1024;
 static samples_t samples = {0, 0};
 
-static result_t audio_samples(void) {
+static result_t audio_sample(void) {
   result_t res = OK;
 
   ma_format fmt;
@@ -97,7 +97,7 @@ result_t audio_open(const char *path) {
     return ERR_AUDIO_OPENFILE;
   }
 
-  return audio_samples();
+  return audio_sample();
 }
 
 void audio_play(void) { ma_sound_start(&sound); }
@@ -119,4 +119,15 @@ void audio_deinit(void) {
   ma_engine_uninit(&engine);
 }
 
-samples_t *audio_getsamples(void) { return &samples; }
+samples_t *audio_samples(void) { return &samples; }
+
+void audio_sectotime(float time, char *buffer) {
+  int minutes = (int)time / 60;
+  float seconds = time - (float)minutes * 60;
+  snprintf(buffer, 15, "%02d:%06.3f", minutes, seconds);
+}
+
+void audio_times(float *total, float *current) {
+  ma_sound_get_cursor_in_seconds(&sound, current);
+  ma_sound_get_length_in_seconds(&sound, total);
+}

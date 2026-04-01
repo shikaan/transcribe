@@ -15,4 +15,7 @@ void audio_deinit(void);
 void audio_pause(void);
 void audio_stop(void);
 bool audio_isplaying(void);
-samples_t *audio_getsamples(void);
+samples_t *audio_samples(void);
+
+void audio_sectotime(float time, char *buffer);
+void audio_times(float *total, float *current);
