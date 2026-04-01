@@ -218,6 +218,21 @@ void ui_spectrum(void) {
     gfx_rect(x, topbary + (height - barh) / 2, barw, barh,
              theme->colors[COLOR_TEXTLIGHT]);
   }
+
+  const float y = theme->spacing * (TITLEBARH + TIMELINEH);
+  const float head = theme->spacing;
+  const float thickness = theme->spacing / 4;
+
+  // FIXME: we could get the time once per frame instead of here and in controls
+  float total, current;
+  audio_times(&total, &current);
+  float headx = (float)samples->len * (barw + bargap) * current / total;
+
+  if (headx < winw) {
+    gfx_rect(headx - head / 2 + thickness / 2, y, head, head,
+             theme->colors[COLOR_PRIMARY]);
+    gfx_rect(headx, y, thickness, height, theme->colors[COLOR_PRIMARY]);
+  }
 }
 
 void ui_controls(void) {
@@ -312,14 +327,14 @@ void ui_controls(void) {
 }
 
 void ui_playhead(void) {
-  const float y = theme->spacing * (TITLEBARH + TIMELINEH);
-  const float height = theme->spacing * SPECTRUM_H;
-  const float head = theme->spacing;
-  const float thickness = theme->spacing / 4;
+  // const float y = theme->spacing * (TITLEBARH + TIMELINEH);
+  // const float height = theme->spacing * SPECTRUM_H;
+  // const float head = theme->spacing;
+  // const float thickness = theme->spacing / 4;
 
-  float x = 100;
+  // float x = 100;
 
-  gfx_rect(x - head / 2 + thickness / 2, y, head, head,
-           theme->colors[COLOR_PRIMARY]);
-  gfx_rect(x, y, thickness, height, theme->colors[COLOR_PRIMARY]);
+  // gfx_rect(x - head / 2 + thickness / 2, y, head, head,
+  //          theme->colors[COLOR_PRIMARY]);
+  // gfx_rect(x, y, thickness, height, theme->colors[COLOR_PRIMARY]);
 }
