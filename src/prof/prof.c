@@ -8,7 +8,7 @@
 
 enum { NSEGMENTS = 32, NLABEL = 16 };
 
-uint64_t times[NSEGMENTS][1024] = {0};
+uint64_t times[NSEGMENTS][1 << 20] = {0};
 size_t lens[NSEGMENTS] = {0};
 char labels[NSEGMENTS][NLABEL] = {0};
 
@@ -50,8 +50,9 @@ void prof_print(void) {
     for (unsigned int i = 0; i < lens[id]; i++)
       total += times[id][i];
     uint64_t avg_ns = (total / lens[id]) * tb.numer / tb.denom;
-    printf("%16s: count=%zu avg=%.3fms\n", labels[id], lens[id],
-           (double)avg_ns / 1e6);
+    uint64_t total_ns = total * tb.numer / tb.denom;
+    printf("%16s: count=%zu avg=%.3fms total=%.3fms\n", labels[id], lens[id],
+           (double)avg_ns / 1e6, (double)total_ns / 1e6);
   }
 }
 #else

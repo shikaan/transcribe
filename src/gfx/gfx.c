@@ -167,6 +167,10 @@ void gfx_drawend(void) {
   }
 
   sg_pass pass = {0};
+  // sglue_swapchain is a frame-pacing function. It calls sapp_get_swapchain
+  // and waits until the display has a free drawable to render into. It's a
+  // vsync block which takes all the time untim 16ms (at 60fps). Remove it from
+  // performance calculations.
   pass.swapchain = sglue_swapchain();
   pass.action.colors[0].load_action = SG_LOADACTION_CLEAR;
   pass.action.colors[0].clear_value =
@@ -277,8 +281,10 @@ void gfx_textbox(string_t str, textdesc_t desc, float *w, float *h) {
     *w += (g.xadvance / scale) + hspacing;
     float gtop = g.yoff / scale;
     float gbot = (g.yoff + (g.y1 - g.y0)) / scale;
-    if (gtop < top) top = gtop;
-    if (gbot > bot) bot = gbot;
+    if (gtop < top)
+      top = gtop;
+    if (gbot > bot)
+      bot = gbot;
   }
   *h = bot - top;
 }
