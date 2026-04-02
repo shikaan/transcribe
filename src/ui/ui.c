@@ -334,16 +334,3 @@ void ui_controls(void) {
              .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
          });
 }
-
-void ui_playhead(void) {
-  // const float y = theme->spacing * (TITLEBARH + TIMELINEH);
-  // const float height = theme->spacing * SPECTRUM_H;
-  // const float head = theme->spacing;
-  // const float thickness = theme->spacing / 4;
-
-  // float x = 100;
-
-  // gfx_rect(x - head / 2 + thickness / 2, y, head, head,
-  //          theme->colors[COLOR_PRIMARY]);
-  // gfx_rect(x, y, thickness, height, theme->colors[COLOR_PRIMARY]);
-}
