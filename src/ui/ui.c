@@ -2,6 +2,7 @@
 #include "audio/audio.h"
 #include "gfx/gfx.h"
 #include "input/input.h"
+#include "prof/prof.h"
 #include "theme.h"
 #include "types.h"
 #include <sokol_app.h>
@@ -41,11 +42,11 @@ typedef struct {
   //        it's likely going to break somewhere else too if we don't understand
   //        how to properly center text vertically
   float pady;
-} icobtndesc_t;
+} btndesc_t;
 
 // FIXME: if this becomes a performance issue, we could precompute the colors
 //        instead of doing it on every frame
-static void ui_btn(float x, float y, float w, float h, icobtndesc_t desc) {
+static void ui_btn(float x, float y, float w, float h, btndesc_t desc) {
   float txtw, txth;
   textdesc_t btndesc = {desc.font, 0};
   gfx_textbox(desc.label, btndesc, &txtw, &txth);
@@ -80,14 +81,14 @@ static void ui_number(float x, float y, float w, float h, string_t label,
   const float icosz = theme->spacing * 3;
 
   ui_btn(x, y + h - icosz, icosz, icosz,
-         (icobtndesc_t){.font = FONT_ICONS_M,
-                        .label = fromconst(ICON_MINUS),
-                        .background = theme->colors[COLOR_BARBG],
-                        .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
-                        .pady = 4.0f});
+         (btndesc_t){.font = FONT_ICONS_M,
+                     .label = fromconst(ICON_MINUS),
+                     .background = theme->colors[COLOR_BARBG],
+                     .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
+                     .pady = 4.0f});
 
   ui_btn(x + w - icosz, y + h - icosz, icosz, icosz,
-         (icobtndesc_t){
+         (btndesc_t){
              .font = FONT_ICONS_M,
              .label = fromconst(ICON_PLUS),
              .background = theme->colors[COLOR_BARBG],
@@ -200,7 +201,8 @@ void ui_timeline(void) {
 void ui_spectrum(void) {
   const float scale = sapp_dpi_scale();
   const float winw = sapp_widthf() / scale;
-  const float topbary = theme->spacing * (TITLEBARH + TIMELINEH);
+  const float spectrumy = theme->spacing * (TITLEBARH + TIMELINEH);
+  const float spectrumx = 0;
   const float height = theme->spacing * SPECTRUM_H;
 
   const float barw = theme->spacing / 2;
@@ -208,30 +210,37 @@ void ui_spectrum(void) {
   const float barmaxh = height - theme->spacing - barminh;
   const float bargap = theme->spacing / 4;
 
-  gfx_rect(0, topbary, winw, height, theme->colors[COLOR_SPECTRUMBG]);
+  gfx_rect(spectrumx, spectrumy, winw, height, theme->colors[COLOR_SPECTRUMBG]);
 
   unsigned int i = 0;
-  float x = 0;
+  float x = spectrumx;
   samples_t *samples = audio_samples();
   for (; x < winw && i < samples->len; x += barw + bargap, i++) {
     float barh = barmaxh * samples->buf[i] + barminh;
-    gfx_rect(x, topbary + (height - barh) / 2, barw, barh,
+    gfx_rect(x, spectrumy + (height - barh) / 2, barw, barh,
              theme->colors[COLOR_TEXTLIGHT]);
   }
 
-  const float y = theme->spacing * (TITLEBARH + TIMELINEH);
-  const float head = theme->spacing;
+  const float heady = theme->spacing * (TITLEBARH + TIMELINEH);
+  const float cursorw = theme->spacing;
   const float thickness = theme->spacing / 4;
 
   // FIXME: we could get the time once per frame instead of here and in controls
   float total, current;
   audio_times(&total, &current);
-  float headx = (float)samples->len * (barw + bargap) * current / total;
+  const float tracklen = (float)samples->len * (barw + bargap);
+
+  float headx = tracklen * current / total;
+  if (input.pressed &&
+      overlaps(spectrumx, spectrumy, winw, height, input.mousex, input.mousey)) {
+    audio_seek(input.mousex * total / tracklen);
+    headx = input.mousex;
+  }
 
   if (headx < winw) {
-    gfx_rect(headx - head / 2 + thickness / 2, y, head, head,
+    gfx_rect(headx - cursorw / 2 + thickness / 2, heady, cursorw, cursorw,
              theme->colors[COLOR_PRIMARY]);
-    gfx_rect(headx, y, thickness, height, theme->colors[COLOR_PRIMARY]);
+    gfx_rect(headx, heady, thickness, height, theme->colors[COLOR_PRIMARY]);
   }
 }
 
@@ -287,7 +296,7 @@ void ui_controls(void) {
   if (!audio_isplaying()) {
     ui_btn(winw / 2 - primarybtnw / 2, y + height / 2 - primarybtnh / 2,
            primarybtnw, primarybtnh,
-           (icobtndesc_t){
+           (btndesc_t){
                .font = FONT_ICONS_XL,
                .label = fromconst(ICON_PLAY),
                .onclick = audio_play,
@@ -297,7 +306,7 @@ void ui_controls(void) {
   } else {
     ui_btn(winw / 2 - primarybtnw / 2, y + height / 2 - primarybtnh / 2,
            primarybtnw, primarybtnh,
-           (icobtndesc_t){
+           (btndesc_t){
                .font = FONT_ICONS_XL,
                .label = fromconst(ICON_PAUSE),
                .onclick = audio_pause,
@@ -308,7 +317,7 @@ void ui_controls(void) {
 
   ui_btn(winw / 2 + primarybtnw / 2 + spacebetween,
          y + height / 2 - secondarybtnh / 2, secondarybtnw, secondarybtnh,
-         (icobtndesc_t){
+         (btndesc_t){
              .font = FONT_ICONS_L,
              .label = fromconst(ICON_LOOP),
              .background = theme->colors[COLOR_BARBG],
@@ -317,7 +326,7 @@ void ui_controls(void) {
 
   ui_btn(winw / 2 - primarybtnw / 2 - secondarybtnw - spacebetween,
          y + height / 2 - secondarybtnh / 2, secondarybtnw, secondarybtnh,
-         (icobtndesc_t){
+         (btndesc_t){
              .font = FONT_ICONS_L,
              .label = fromconst(ICON_STOP),
              .onclick = audio_stop,

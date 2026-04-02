@@ -15,6 +15,7 @@ typedef struct {
   float mousey;
   mousebtn_t mousebtn;
   bool clicked : 1;
+  bool pressed : 1;
   bool down : 1;
   bool up : 1;
 } input_t;

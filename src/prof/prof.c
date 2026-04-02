@@ -57,8 +57,6 @@ void prof_print(void) {
 }
 #else
 
-#define prof_segstart(...)
-#define prof_segend(...)
-#define prof_print(...)
+int a;
 
 #endif

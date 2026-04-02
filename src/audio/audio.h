@@ -19,3 +19,4 @@ samples_t *audio_samples(void);
 
 void audio_sectotime(float time, char *buffer);
 void audio_times(float *total, float *current);
+void audio_seek(float time);

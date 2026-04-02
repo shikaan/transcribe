@@ -10,6 +10,7 @@ void input_event(const sapp_event *ev) {
   case SAPP_EVENTTYPE_MOUSE_DOWN:
     input.mousebtn = (mousebtn_t)ev->mouse_button;
     input.down = 1;
+    input.pressed = 1;
     input.up = 0;
     break;
   case SAPP_EVENTTYPE_MOUSE_UP:
@@ -52,4 +53,5 @@ void input_event(const sapp_event *ev) {
 
 void input_done(void) {
   input.clicked = 0;
+  input.pressed = 0;
 }

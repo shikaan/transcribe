@@ -127,7 +127,11 @@ void audio_sectotime(float time, char *buffer) {
   snprintf(buffer, 15, "%02d:%06.3f", minutes, seconds);
 }
 
-void audio_times(float *total, float *current) {
-  ma_sound_get_cursor_in_seconds(&sound, current);
+void audio_times(float *total, float *now) {
+  ma_sound_get_cursor_in_seconds(&sound, now);
   ma_sound_get_length_in_seconds(&sound, total);
+}
+
+void audio_seek(float time) {
+  ma_sound_seek_to_second(&sound, time);
 }
