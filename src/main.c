@@ -16,12 +16,8 @@ static void init(void) {
 }
 
 static void frame(void) {
-  // FIXME: inject inputs instead of reading from gloabl for testability
   gfx_drawstart(theme->colors[COLOR_BACKGROUND]);
-  ui_titlebar();
-  ui_timeline();
-  ui_spectrum();
-  ui_controls();
+  ui_app();
   gfx_drawend();
   input_done();
 }

@@ -19,10 +19,13 @@ void input_event(const sapp_event *ev) {
     input.up = 1;
     input.down = 0;
     break;
-  case SAPP_EVENTTYPE_MOUSE_SCROLL:
   case SAPP_EVENTTYPE_MOUSE_MOVE:
     input.mousex = ev->mouse_x / scale;
     input.mousey = ev->mouse_y / scale;
+    break;
+  case SAPP_EVENTTYPE_MOUSE_SCROLL:
+    input.scrollx = ev->scroll_x;
+    input.scrolly = ev->scroll_y;
     break;
   case SAPP_EVENTTYPE_MOUSE_ENTER:
   case SAPP_EVENTTYPE_MOUSE_LEAVE:
@@ -54,4 +57,6 @@ void input_event(const sapp_event *ev) {
 void input_done(void) {
   input.clicked = 0;
   input.pressed = 0;
+  input.scrollx = 0;
+  input.scrolly = 0;
 }

@@ -1,6 +1,3 @@
 #pragma once
 
-void ui_titlebar(void);
-void ui_timeline(void);
-void ui_spectrum(void);
-void ui_controls(void);
+void ui_app(void);

@@ -121,12 +121,6 @@ void audio_deinit(void) {
 
 samples_t *audio_samples(void) { return &samples; }
 
-void audio_sectotime(float time, char *buffer) {
-  int minutes = (int)time / 60;
-  float seconds = time - (float)minutes * 60;
-  snprintf(buffer, 15, "%02d:%06.3f", minutes, seconds);
-}
-
 void audio_times(float *total, float *now) {
   ma_sound_get_cursor_in_seconds(&sound, now);
   ma_sound_get_length_in_seconds(&sound, total);

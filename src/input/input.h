@@ -13,6 +13,8 @@ typedef enum {
 typedef struct {
   float mousex;
   float mousey;
+  float scrollx;
+  float scrolly;
   mousebtn_t mousebtn;
   bool clicked : 1;
   bool pressed : 1;

@@ -16,3 +16,11 @@ typedef enum {
   ERR_AUDIO_OPENFILE = -102,
   ERR_AUDIO_DECODE = -103
 } result_t;
+
+typedef struct {
+  float x, y;
+} pos_t;
+
+typedef struct {
+  float x, y, w, h;
+} rect_t;
