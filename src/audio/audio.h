@@ -14,8 +14,8 @@ void audio_play(void);
 void audio_deinit(void);
 void audio_pause(void);
 void audio_stop(void);
-bool audio_isplaying(void);
-samples_t *audio_samples(void);
+void audio_isplaying(bool *isplaying);
 
+void audio_samples(samples_t **samples);
 void audio_times(float *total, float *current);
 void audio_seek(float time);

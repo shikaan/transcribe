@@ -109,7 +109,7 @@ void audio_stop(void) {
   ma_sound_seek_to_pcm_frame(&sound, 0);
 }
 
-bool audio_isplaying(void) { return ma_sound_is_playing(&sound); }
+void audio_isplaying(bool *b) { *b = ma_sound_is_playing(&sound); }
 
 void audio_deinit(void) {
   free(samples.buf);
@@ -119,13 +119,11 @@ void audio_deinit(void) {
   ma_engine_uninit(&engine);
 }
 
-samples_t *audio_samples(void) { return &samples; }
+void audio_samples(samples_t **s) { *s = &samples; }
 
 void audio_times(float *total, float *now) {
   ma_sound_get_cursor_in_seconds(&sound, now);
   ma_sound_get_length_in_seconds(&sound, total);
 }
 
-void audio_seek(float time) {
-  ma_sound_seek_to_second(&sound, time);
-}
+void audio_seek(float time) { ma_sound_seek_to_second(&sound, time); }

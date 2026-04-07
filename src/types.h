@@ -5,7 +5,7 @@ typedef struct {
   unsigned long len;
 } string_t;
 
-#define fromconst(str) (string_t){str, sizeof(str) - 1}
+#define string(str) (string_t){str, sizeof(str) - 1}
 
 typedef enum {
   OK,
@@ -16,11 +16,3 @@ typedef enum {
   ERR_AUDIO_OPENFILE = -102,
   ERR_AUDIO_DECODE = -103
 } result_t;
-
-typedef struct {
-  float x, y;
-} pos_t;
-
-typedef struct {
-  float x, y, w, h;
-} rect_t;

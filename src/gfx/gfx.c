@@ -308,3 +308,10 @@ color_t gfx_lighten(color_t c, float amount) {
       c.a,
   };
 }
+
+
+void gfx_line(float x0, float y0, float len, linedir_t dir, color_t col) {
+  const float thickness = 1;
+  gfx_rect(x0, y0, dir == LINEDIR_V ? thickness : len,
+           dir == LINEDIR_V ? len : thickness, col);
+}

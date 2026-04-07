@@ -17,19 +17,19 @@ enum {
   COLORS,
 };
 
-static const char ICON_OPEN[] = "a";
-static const char ICON_FILE[] = "b";
-static const char ICON_PUZZLE[] = "c";
-static const char ICON_PLUS[] = "d";
-static const char ICON_MINUS[] = "e";
-static const char ICON_ZOOMIN[] = "f";
-static const char ICON_ZOOMOUT[] = "g";
-static const char ICON_LOOP[] = "h";
-static const char ICON_PLAY[] = "i";
-static const char ICON_PAUSE[] = "j";
-static const char ICON_STOP[] = "k";
-static const char ICON_EQ[] = "l";
-static const char ICON_CLOSE[] = "m";
+static char ICON_OPEN[] = "a";
+static char ICON_FILE[] = "b";
+static char ICON_PUZZLE[] = "c";
+static char ICON_PLUS[] = "d";
+static char ICON_MINUS[] = "e";
+static char ICON_ZOOMIN[] = "f";
+static char ICON_ZOOMOUT[] = "g";
+static char ICON_LOOP[] = "h";
+static char ICON_PLAY[] = "i";
+static char ICON_PAUSE[] = "j";
+static char ICON_STOP[] = "k";
+static char ICON_EQ[] = "l";
+static char ICON_CLOSE[] = "m";
 
 typedef struct {
   color_t colors[COLORS];
