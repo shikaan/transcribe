@@ -86,8 +86,7 @@ done:
 }
 
 result_t audio_open(const char *path) {
-  ma_engine_uninit(&engine);
-  ma_sound_uninit(&sound);
+  audio_deinit();
 
   result = ma_engine_init(NULL, &engine);
   if (result != MA_SUCCESS) {

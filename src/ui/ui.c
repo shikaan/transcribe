@@ -208,6 +208,7 @@ static void ui_waveform(void) {
   const float barpx = barw + bargap;
   const float tracklen =
       (float)samples->len * barpx * zoom / SAMPLES_PER_WAVEBAR;
+  const size_t samplestride = (size_t)(SAMPLES_PER_WAVEBAR / zoom);
 
   // Playhead
   const float cursorw = theme->spacing;
@@ -221,7 +222,6 @@ static void ui_waveform(void) {
   const float llineh = theme->spacing * 1.5f;
   const float timepad = theme->spacing / 4;
   const float tlsecperstride = 1 / zoom;
-  const size_t samplestride = (size_t)(SAMPLES_PER_WAVEBAR / zoom);
 
   scroll();
 
