@@ -91,8 +91,9 @@ result_t audio_open(const char *path) {
     return ERR_AUDIO_INIT;
   }
 
-  result = ma_sound_init_from_file(&engine, path, MA_SOUND_FLAG_DECODE, NULL,
-                                   NULL, &sound);
+  result = ma_sound_init_from_file(&engine, path,
+                                   MA_SOUND_FLAG_DECODE,
+                                   NULL, NULL, &sound);
   if (result != MA_SUCCESS) {
     return ERR_AUDIO_OPENFILE;
   }

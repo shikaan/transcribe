@@ -19,17 +19,15 @@ void ui_num(float x, float y, float w, float h, string_t label,
   const float icosz = theme->spacing * 3;
 
   ui_btn(x, y + h - icosz, icosz, icosz,
-         (btndesc_t){.font = FONT_ICONS_M,
-                     .label = string(ICON_MINUS),
+         (btndesc_t){.iconfont = FONT_ICONS_M,
+                     .icon = string(ICON_MINUS),
                      .background = theme->colors[COLOR_BARBG],
                      .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
                      .pady = 4.0f});
 
   ui_btn(x + w - icosz, y + h - icosz, icosz, icosz,
-         (btndesc_t){
-             .font = FONT_ICONS_M,
-             .label = string(ICON_PLUS),
-             .background = theme->colors[COLOR_BARBG],
-             .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
-         });
+         (btndesc_t){.iconfont = FONT_ICONS_M,
+                     .icon = string(ICON_PLUS),
+                     .background = theme->colors[COLOR_BARBG],
+                     .foreground = theme->colors[COLOR_TEXTHIGHLIGHT]});
 }

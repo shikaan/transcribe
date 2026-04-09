@@ -9,6 +9,8 @@ enum {
 };
 
 typedef enum {
+  NO_FONT = -1,
+
   FONT_SANS_S,
   FONT_SANS_M,
   FONT_SANS_BOLD_M,

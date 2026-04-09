@@ -2,7 +2,6 @@
 #include <sokol_app.h>
 #include <stdio.h>
 
-#include "audio/audio.h"
 #include "gfx/gfx.h"
 #include "input/input.h"
 #include "prof/prof.h"
@@ -10,8 +9,6 @@
 #include "ui/ui.h"
 
 static void init(void) {
-  // FIXME: use file open instead
-  audio_open("/Users/manuel/dev/shikaan/transcriptions/test1.mp3");
   gfx_init();
 }
 

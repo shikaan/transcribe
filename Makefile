@@ -72,6 +72,8 @@ vnd/sokol.o: vnd/sokol.m
 
 vnd/miniaudio.o: CFLAGS :=-O2
 
+vnd/tinyfiledialogs.o: CFLAGS := -O2
+
 src/shader.h: src/shader.glsl
 	tools/sokol-tools/bin/osx_arm64/sokol-shdc \
 	--input src/shader.glsl \
@@ -83,8 +85,9 @@ src/gfx/gfx.o: src/gfx/gfx.c | src/gfx/shader.h
 
 src/main: LDFLAGS := $(SOKOL_LDFLAGS)
 src/main: CFLAGS += -D$(SOKOL_BACKEND)
-src/main: vnd/sokol.o vnd/miniaudio.o \
+src/main: vnd/sokol.o vnd/miniaudio.o vnd/tinyfiledialogs.o \
 	src/gfx/gfx.o src/ui/ui.o src/audio/audio.o src/input/input.o src/prof/prof.o \
+	src/fmt/fmt.o \
 	| src/gfx/shader.h
 
 .PHONY: assets
