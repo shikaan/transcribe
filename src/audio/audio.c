@@ -8,9 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-static ma_result result;
-static ma_engine engine;
-static ma_sound sound;
+static ma_result result = {0};
+static ma_engine engine = {0};
+static ma_sound sound = {0};
 
 const ma_uint64 framespersample = 1024;
 static samples_t samples = {0, 0};
@@ -43,7 +43,7 @@ static result_t audio_sample(void) {
   size_t sampleslen = nframes / framespersample;
   if (samples.buf) {
     if (samples.len >= sampleslen) {
-      assert(samples.buf && "audio: expected non-null samples.buf");
+      assert(samples.buf && "audio_sample: expected non-null samples.buf");
       memset(samples.buf, 0, samples.len * sizeof(float));
       samples.len = sampleslen;
     } else {
@@ -86,14 +86,16 @@ done:
 }
 
 result_t audio_open(const char *path) {
+  ma_engine_uninit(&engine);
+  ma_sound_uninit(&sound);
+
   result = ma_engine_init(NULL, &engine);
   if (result != MA_SUCCESS) {
     return ERR_AUDIO_INIT;
   }
 
-  result = ma_sound_init_from_file(&engine, path,
-                                   MA_SOUND_FLAG_DECODE,
-                                   NULL, NULL, &sound);
+  result = ma_sound_init_from_file(&engine, path, MA_SOUND_FLAG_DECODE, NULL,
+                                   NULL, &sound);
   if (result != MA_SUCCESS) {
     return ERR_AUDIO_OPENFILE;
   }
