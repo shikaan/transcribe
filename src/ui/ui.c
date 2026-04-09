@@ -38,7 +38,7 @@ static const float WAVEBARW = 0.5;
 static const float WAVEBARGAP = 0.25;
 
 // UI State
-static char shortbuf[16] = {0};
+static char fmtbuf[16] = {0};
 static bool isempty = true;
 static bool isplaying = false;
 static float winw = 0;
@@ -50,11 +50,11 @@ static float zoom = 1.0f;
 static samples_t *samples = 0;
 
 #ifndef NDEBUG
-static char longbuf[1024] = "test.mp3";
-static string_t filename = {longbuf, 8};
+static char namebuf[1024] = "test.mp3";
+static string_t filename = {namebuf, 8};
 #else
-static char longbuf[1024] = {0};
-static string_t filename = {longbuf, 0};
+static char namebuf[1024] = {0};
+static string_t filename = {namebuf, 0};
 #endif
 
 static void openfile(void) {
@@ -72,17 +72,18 @@ static void openfile(void) {
     return;
   }
 
-  filename.len = fmt_basename(pathbuf, longbuf, sizeof(longbuf));
+  filename.len = fmt_basename(pathbuf, namebuf, sizeof(namebuf));
   scrollx = 0;
 }
 
 // Recalculate scrollx. To be used after a zoom or a scroll event.
 static void scroll(void) {
-  const float barpx = theme->spacing * WAVEBARW + theme->spacing * WAVEBARGAP;
-  const float lenf = (float)samples->len;
-  const float tracklen = lenf * barpx * zoom / SAMPLES_PER_WAVEBAR;
-  const float new = scrollx + SCROLL_DIRECTION * input.scrollx * SCROLL_FACTOR;
-  scrollx = clamp(new, 0, tracklen - winw);
+  const float barpx = theme->spacing * (WAVEBARW + WAVEBARGAP);
+  const float tracklen =
+      (float)samples->len * barpx * zoom / SAMPLES_PER_WAVEBAR;
+  const float newscrollx =
+      scrollx + SCROLL_DIRECTION * input.scrollx * SCROLL_FACTOR;
+  scrollx = clamp(newscrollx, 0, tracklen - winw);
 }
 
 static void zoomin(void) {
@@ -108,8 +109,7 @@ static void ui_zoom(float x, float y, float w, float h) {
              .onclick = zoomout,
          });
 
-  string_t str = {shortbuf, sizeof(shortbuf) - 1};
-  str.len = fmt_zoom(zoom, shortbuf, sizeof(shortbuf));
+  string_t str = {fmtbuf, fmt_zoom(zoom, fmtbuf, sizeof(fmtbuf))};
 
   textdesc_t desc = {FONT_MONO_M, 0};
   float txtw, txth;
@@ -205,11 +205,11 @@ static void ui_waveform(void) {
   const float barminh = theme->spacing / 2;
   const float barmaxh = waveh - theme->spacing - barminh;
   const float bargap = theme->spacing * WAVEBARGAP;
+  const float barpx = barw + bargap;
   const float tracklen =
-      (float)samples->len * (barw + bargap) * zoom / SAMPLES_PER_WAVEBAR;
+      (float)samples->len * barpx * zoom / SAMPLES_PER_WAVEBAR;
 
   // Playhead
-  const float heady = theme->spacing * (TITLEBARH + TIMELINEH);
   const float cursorw = theme->spacing;
   const float thickness = theme->spacing / 4;
 
@@ -218,10 +218,9 @@ static void ui_waveform(void) {
   const float timeliney = theme->spacing * TITLEBARH;
   const float timelineh = theme->spacing * TIMELINEH;
   const float lineh = theme->spacing;
-  const float linew = 1;
   const float llineh = theme->spacing * 1.5f;
   const float timepad = theme->spacing / 4;
-  const float secperstride = 1 / zoom;
+  const float tlsecperstride = 1 / zoom;
   const size_t samplestride = (size_t)(SAMPLES_PER_WAVEBAR / zoom);
 
   scroll();
@@ -229,7 +228,6 @@ static void ui_waveform(void) {
   // Waveform
   gfx_rect(wavex, wavey, winw, waveh, theme->colors[COLOR_SPECTRUMBG]);
 
-  const float barpx = barw + bargap;
   const float waveoffset = fmodf(scrollx, barpx);
   size_t sample = (size_t)(scrollx / barpx) * samplestride;
   float barx = -waveoffset;
@@ -249,17 +247,17 @@ static void ui_waveform(void) {
   }
 
   if (headx < winw) {
-    gfx_rect(headx - cursorw / 2 + thickness / 2, heady, cursorw, cursorw,
+    gfx_rect(headx - cursorw / 2 + thickness / 2, wavey, cursorw, cursorw,
              theme->colors[COLOR_PRIMARY]);
-    gfx_rect(headx, heady, thickness, waveh, theme->colors[COLOR_PRIMARY]);
+    gfx_rect(headx, wavey, thickness, waveh, theme->colors[COLOR_PRIMARY]);
   }
 
   // Timeline
-  string_t time = {shortbuf, 5};
-  float tlstride = sectopx * secperstride;
+  string_t timecode = {fmtbuf, 0};
+  float tlstride = sectopx * tlsecperstride;
   float timey = timeliney + timelineh - 1 - llineh;
-  float tloffset = fmodf(scrollx, tlstride); // How many strides in scroll?
-  float seconds = (scrollx - tloffset) / tlstride * secperstride;
+  float tloffset = fmodf(scrollx, tlstride);
+  float seconds = (scrollx - tloffset) / tlstride * tlsecperstride;
 
   gfx_rect(0, timeliney, winw, timelineh, theme->colors[COLOR_BARBG]);
   gfx_line(0, timeliney + timelineh - 1, winw, LINEDIR_H,
@@ -267,12 +265,12 @@ static void ui_waveform(void) {
 
   textdesc_t desc = {FONT_MONO_S, 0};
   for (float timex = -tloffset; timex < winw; timex += tlstride) {
-    time.len =
-        fmt_sectotime(seconds, FMT_TIMECODESHORT, shortbuf, len(shortbuf));
-    gfx_text(timex + linew, timey - timepad, time, desc,
+    timecode.len =
+        fmt_sectotime(seconds, FMT_TIMECODESHORT, fmtbuf, len(fmtbuf));
+    gfx_text(timex + 1, timey - timepad, timecode, desc,
              theme->colors[COLOR_TEXTLIGHT]);
     gfx_line(timex, timey, llineh, LINEDIR_V, theme->colors[COLOR_TEXTDIM]);
-    seconds += secperstride;
+    seconds += tlsecperstride;
   }
 
   timey = timeliney + timelineh - 1 - lineh;
@@ -304,17 +302,17 @@ static void ui_controls(void) {
   gfx_rect(0, y, winw, height, theme->colors[COLOR_BARBG]);
 
   // Timecode
-  string_t timecode = {shortbuf, 10};
-
-  timecode.len =
-      fmt_sectotime(currentsec, FMT_TIMECODE, shortbuf, len(shortbuf));
+  string_t timecode = {
+      fmtbuf,
+      fmt_sectotime(currentsec, FMT_TIMECODE, fmtbuf, len(fmtbuf)),
+  };
   currentx += padx;
   textdesc_t desc = {FONT_MONO_L, 0};
   gfx_textbox(timecode, desc, &txtw, &txth);
   gfx_text(currentx, y + height / 2 + txth / 2, timecode, desc,
            theme->colors[COLOR_TEXTHIGHLIGHT]);
 
-  timecode.len = fmt_sectotime(totalsec, FMT_TIMECODE, shortbuf, len(shortbuf));
+  timecode.len = fmt_sectotime(totalsec, FMT_TIMECODE, fmtbuf, len(fmtbuf));
   currentx += txtw + theme->spacing * 2;
   desc.font = FONT_MONO_M;
   gfx_text(currentx, y + height / 2 + txth / 2, timecode, desc,
