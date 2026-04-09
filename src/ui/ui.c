@@ -54,7 +54,7 @@ static char longbuf[1024] = "test.mp3";
 static string_t filename = {longbuf, 8};
 #else
 static char longbuf[1024] = {0};
-static string_t filename = {namebuf, 0};
+static string_t filename = {longbuf, 0};
 #endif
 
 static void openfile(void) {
