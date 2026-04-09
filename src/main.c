@@ -2,6 +2,7 @@
 #include <sokol_app.h>
 #include <stdio.h>
 
+#include "audio/audio.h"
 #include "gfx/gfx.h"
 #include "input/input.h"
 #include "prof/prof.h"
@@ -9,6 +10,9 @@
 #include "ui/ui.h"
 
 static void init(void) {
+  #ifdef DEBUG
+    audio_open("test.mp3");
+  #endif
   gfx_init();
 }
 

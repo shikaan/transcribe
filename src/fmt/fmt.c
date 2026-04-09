@@ -38,3 +38,10 @@ size_t fmt_basename(const char *path, char *dest, size_t maxlen) {
 
   return min(maxlen - 1, (size_t)len);
 }
+
+size_t fmt_zoom(float zoom, char *dest, size_t maxlen) { 
+  int len = snprintf(dest, maxlen, "%03.1fx", zoom);
+  assert(len > 0 && "fmt_zoom: cannot write zoom");
+
+  return min(maxlen - 1, (size_t)len);
+}

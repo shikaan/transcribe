@@ -9,3 +9,4 @@ typedef enum {
 
 size_t fmt_sectotime(float time, timefmt_t fmt, char *dest, size_t maxlen);
 size_t fmt_basename(const char *path, char *dest, size_t maxlen); 
+size_t fmt_zoom(float zoom, char* dest, size_t maxlen);

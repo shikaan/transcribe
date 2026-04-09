@@ -12,7 +12,7 @@ static ma_result result = {0};
 static ma_engine engine = {0};
 static ma_sound sound = {0};
 
-const ma_uint64 framespersample = 1024;
+const ma_uint64 framespersample = 128;
 static samples_t samples = {0, 0};
 
 static result_t audio_sample(void) {

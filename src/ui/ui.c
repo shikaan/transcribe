@@ -23,15 +23,22 @@
 // Configuration
 static const float SCROLL_FACTOR = 16;
 static const float SCROLL_DIRECTION = -1;
+static const float SAMPLES_PER_WAVEBAR = 8;
 
-// UI Constants
+// Constants
+static const float MIN_ZOOM = 0.5;
+static const float MAX_ZOOM = 4;
+
+// UI Spacing Constants (multiply by theme->spacing to use)
 static const float TITLEBARH = 6;
 static const float TIMELINEH = 4;
-static const float SPECTRUM_H = 32;
+static const float SPECTRUMH = 32;
 static const float BARPADX = 3;
+static const float WAVEBARW = 0.5;
+static const float WAVEBARGAP = 0.25;
 
 // UI State
-static char timebuf[16] = "";
+static char shortbuf[16] = {0};
 static bool isempty = true;
 static bool isplaying = false;
 static float winw = 0;
@@ -39,12 +46,19 @@ static float winh = 0;
 static float totalsec = 0;
 static float currentsec = 0;
 static float scrollx = 0;
+static float zoom = 1.0f;
+static samples_t *samples = 0;
 
-static char namebuf[1024] = {0};
+#ifndef NDEBUG
+static char longbuf[1024] = "test.mp3";
+static string_t filename = {longbuf, 8};
+#else
+static char longbuf[1024] = {0};
 static string_t filename = {namebuf, 0};
-static char pathbuf[1024] = {0};
+#endif
 
 static void openfile(void) {
+  char pathbuf[1024] = {0};
   result_t r = files_open(pathbuf, len(pathbuf));
   // TODO: tell user why the file was not loaded (e.g., "Operation cancelled")
   if (r == ERR_FILES_CANCEL) {
@@ -58,8 +72,59 @@ static void openfile(void) {
     return;
   }
 
-  filename.len = fmt_basename(pathbuf, namebuf, sizeof(namebuf));
+  filename.len = fmt_basename(pathbuf, longbuf, sizeof(longbuf));
   scrollx = 0;
+}
+
+// Recalculate scrollx. To be used after a zoom or a scroll event.
+static void scroll(void) {
+  const float barpx = theme->spacing * WAVEBARW + theme->spacing * WAVEBARGAP;
+  const float lenf = (float)samples->len;
+  const float tracklen = lenf * barpx * zoom / SAMPLES_PER_WAVEBAR;
+  const float new = scrollx + SCROLL_DIRECTION * input.scrollx * SCROLL_FACTOR;
+  scrollx = clamp(new, 0, tracklen - winw);
+}
+
+static void zoomin(void) {
+  zoom = clamp(zoom * 2, MIN_ZOOM, MAX_ZOOM);
+  scroll();
+}
+
+static void zoomout(void) {
+  zoom = clamp(zoom / 2, MIN_ZOOM, MAX_ZOOM);
+  scroll();
+}
+
+static void ui_zoom(float x, float y, float w, float h) {
+  const float btnh = theme->spacing * 4;
+  const float btnw = btnh;
+
+  ui_btn(x, y + h / 2 - btnh / 2, btnw, btnh,
+         (btndesc_t){
+             .background = theme->colors[COLOR_BARBG],
+             .foreground = theme->colors[COLOR_TEXTLIGHT],
+             .icon = string(ICON_ZOOMOUT),
+             .iconfont = FONT_ICONS_M,
+             .onclick = zoomout,
+         });
+
+  string_t str = {shortbuf, sizeof(shortbuf) - 1};
+  str.len = fmt_zoom(zoom, shortbuf, sizeof(shortbuf));
+
+  textdesc_t desc = {FONT_MONO_M, 0};
+  float txtw, txth;
+  gfx_textbox(str, desc, &txtw, &txth);
+  gfx_text(x + w / 2 - txtw / 2, h / 2 + txth / 2, str, desc,
+           theme->colors[COLOR_TEXTLIGHT]);
+
+  ui_btn(x + w - btnw, y + h / 2 - btnh / 2, btnw, btnh,
+         (btndesc_t){
+             .background = theme->colors[COLOR_BARBG],
+             .foreground = theme->colors[COLOR_TEXTLIGHT],
+             .icon = string(ICON_ZOOMIN),
+             .iconfont = FONT_ICONS_M,
+             .onclick = zoomin,
+         });
 }
 
 static void ui_titlebar(void) {
@@ -74,7 +139,7 @@ static void ui_titlebar(void) {
 
   float currentx = 0;
   string_t puzzle = string(ICON_PUZZLE);
-  textdesc_t desc = (textdesc_t){FONT_ICONS_M, 0};
+  textdesc_t desc = {FONT_ICONS_M, 0};
   gfx_textbox(puzzle, desc, &txtw, &txth);
   currentx += padx;
   gfx_text(currentx, height / 2 + txth / 2, puzzle, desc,
@@ -123,28 +188,25 @@ static void ui_titlebar(void) {
   gfx_text(currentx, height / 2 + txth / 2, filename, desc,
            theme->colors[COLOR_TEXTLIGHT]);
 
-  string_t settingsicon = string(ICON_EQ);
-  desc.font = FONT_ICONS_M;
-  gfx_textbox(settingsicon, desc, &txtw, &txth);
-  gfx_text(winw - txtw - padx, height / 2 + txth / 2, settingsicon, desc,
-           theme->colors[COLOR_TEXTLIGHT]);
+  const float zoomw = theme->spacing * 14;
+  ui_zoom(winw - padx - zoomw, height / 2 - height / 2, zoomw, height);
 
   gfx_line(0, height - 1, winw, LINEDIR_H, theme->colors[COLOR_TEXTDIM]);
 }
 
 static void ui_waveform(void) {
-  samples_t *samples;
   audio_samples(&samples);
 
   // Waveform
   const float wavey = theme->spacing * (TITLEBARH + TIMELINEH);
   const float wavex = 0;
-  const float waveh = theme->spacing * SPECTRUM_H;
-  const float barw = theme->spacing / 2;
+  const float waveh = theme->spacing * SPECTRUMH;
+  const float barw = theme->spacing * WAVEBARW;
   const float barminh = theme->spacing / 2;
   const float barmaxh = waveh - theme->spacing - barminh;
-  const float bargap = theme->spacing / 4;
-  const float tracklen = (float)samples->len * (barw + bargap);
+  const float bargap = theme->spacing * WAVEBARGAP;
+  const float tracklen =
+      (float)samples->len * (barw + bargap) * zoom / SAMPLES_PER_WAVEBAR;
 
   // Playhead
   const float heady = theme->spacing * (TITLEBARH + TIMELINEH);
@@ -159,19 +221,23 @@ static void ui_waveform(void) {
   const float linew = 1;
   const float llineh = theme->spacing * 1.5f;
   const float timepad = theme->spacing / 4;
-  const float secperstride = 1;
+  const float secperstride = 1 / zoom;
+  const size_t samplestride = (size_t)(SAMPLES_PER_WAVEBAR / zoom);
 
-  float newscrollx = scrollx + SCROLL_DIRECTION * input.scrollx * SCROLL_FACTOR;
-  scrollx = clamp(newscrollx, 0, tracklen - winw);
+  scroll();
 
   // Waveform
   gfx_rect(wavex, wavey, winw, waveh, theme->colors[COLOR_SPECTRUMBG]);
-  size_t sample = (size_t)(scrollx / (barw + bargap));
-  for (float x = wavex; x < winw && sample < samples->len;
-       x += barw + bargap, sample++) {
+
+  const float barpx = barw + bargap;
+  const float waveoffset = fmodf(scrollx, barpx);
+  size_t sample = (size_t)(scrollx / barpx) * samplestride;
+  float barx = -waveoffset;
+  for (; barx < winw && sample < samples->len;
+       barx += barpx, sample += samplestride) {
     float barh = barmaxh * samples->buf[sample] + barminh;
-    gfx_rect(x, wavey + (waveh - barh) / 2, barw, barh,
-             theme->colors[COLOR_TEXTLIGHT]);
+    float bary = wavey + (waveh - barh) / 2;
+    gfx_rect(barx, bary, barw, barh, theme->colors[COLOR_TEXTLIGHT]);
   }
 
   // Playhead
@@ -189,19 +255,20 @@ static void ui_waveform(void) {
   }
 
   // Timeline
-  string_t time = {timebuf, 5};
-  float stride = sectopx * secperstride;
+  string_t time = {shortbuf, 5};
+  float tlstride = sectopx * secperstride;
   float timey = timeliney + timelineh - 1 - llineh;
-  float offset = fmodf(scrollx, stride); // How many strides in scroll?
-  float seconds = (scrollx - offset) / stride * secperstride;
+  float tloffset = fmodf(scrollx, tlstride); // How many strides in scroll?
+  float seconds = (scrollx - tloffset) / tlstride * secperstride;
 
   gfx_rect(0, timeliney, winw, timelineh, theme->colors[COLOR_BARBG]);
   gfx_line(0, timeliney + timelineh - 1, winw, LINEDIR_H,
            theme->colors[COLOR_TEXTDIM]);
 
   textdesc_t desc = {FONT_MONO_S, 0};
-  for (float timex = -offset; timex < winw; timex += stride) {
-    time.len = fmt_sectotime(seconds, FMT_TIMECODESHORT, timebuf, len(timebuf));
+  for (float timex = -tloffset; timex < winw; timex += tlstride) {
+    time.len =
+        fmt_sectotime(seconds, FMT_TIMECODESHORT, shortbuf, len(shortbuf));
     gfx_text(timex + linew, timey - timepad, time, desc,
              theme->colors[COLOR_TEXTLIGHT]);
     gfx_line(timex, timey, llineh, LINEDIR_V, theme->colors[COLOR_TEXTDIM]);
@@ -209,10 +276,10 @@ static void ui_waveform(void) {
   }
 
   timey = timeliney + timelineh - 1 - lineh;
-  float half = stride / 2;
-  offset = fmodf(scrollx - half, stride);
-  float linex = -offset;
-  for (; linex < winw; linex += stride) {
+  float half = tlstride / 2;
+  tloffset = fmodf(scrollx - half, tlstride);
+  float linex = -tloffset;
+  for (; linex < winw; linex += tlstride) {
     gfx_line(linex, timey, lineh, LINEDIR_V, theme->colors[COLOR_TEXTDIM]);
   }
 }
@@ -237,16 +304,17 @@ static void ui_controls(void) {
   gfx_rect(0, y, winw, height, theme->colors[COLOR_BARBG]);
 
   // Timecode
-  string_t timecode = {timebuf, 10};
+  string_t timecode = {shortbuf, 10};
 
-  timecode.len = fmt_sectotime(currentsec, FMT_TIMECODE, timebuf, len(timebuf));
+  timecode.len =
+      fmt_sectotime(currentsec, FMT_TIMECODE, shortbuf, len(shortbuf));
   currentx += padx;
   textdesc_t desc = {FONT_MONO_L, 0};
   gfx_textbox(timecode, desc, &txtw, &txth);
   gfx_text(currentx, y + height / 2 + txth / 2, timecode, desc,
            theme->colors[COLOR_TEXTHIGHLIGHT]);
 
-  timecode.len = fmt_sectotime(totalsec, FMT_TIMECODE, timebuf, len(timebuf));
+  timecode.len = fmt_sectotime(totalsec, FMT_TIMECODE, shortbuf, len(shortbuf));
   currentx += txtw + theme->spacing * 2;
   desc.font = FONT_MONO_M;
   gfx_text(currentx, y + height / 2 + txth / 2, timecode, desc,
