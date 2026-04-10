@@ -16,6 +16,7 @@ const ma_uint64 framespersample = 128;
 static samples_t samples = {0, 0};
 
 static result_t audio_sample(void) {
+  // TODO: how to assert sound and engine are initialized here?
   result_t res = OK;
 
   ma_format fmt;
@@ -43,7 +44,6 @@ static result_t audio_sample(void) {
   size_t sampleslen = nframes / framespersample;
   if (samples.buf) {
     if (samples.len >= sampleslen) {
-      assert(samples.buf && "audio_sample: expected non-null samples.buf");
       memset(samples.buf, 0, samples.len * sizeof(float));
       samples.len = sampleslen;
     } else {
@@ -63,9 +63,6 @@ static result_t audio_sample(void) {
     }
   }
 
-  // FIXME: this block is slow and causes the UI to stutter. Depending on how we
-  // end up opening files, it might be a good idea to move this to another
-  // thread or make it anyway not render-blockign
   for (unsigned int i = 0; i < samples.len; i++) {
     float peak = 0.0f;
     for (ma_uint64 j = 0; j < framespersample; j++) {
@@ -86,6 +83,7 @@ done:
 }
 
 result_t audio_open(const char *path) {
+  assert(path && "audio_open: path must be non null");
   audio_deinit();
 
   result = ma_engine_init(NULL, &engine);
@@ -111,7 +109,10 @@ void audio_stop(void) {
   ma_sound_seek_to_pcm_frame(&sound, 0);
 }
 
-void audio_isplaying(bool *b) { *b = ma_sound_is_playing(&sound); }
+void audio_isplaying(bool *b) {
+  assert(b && "audio_isplaying: return value must be non-null");
+  *b = ma_sound_is_playing(&sound);
+}
 
 void audio_deinit(void) {
   free(samples.buf);
@@ -121,11 +122,15 @@ void audio_deinit(void) {
   ma_engine_uninit(&engine);
 }
 
-void audio_samples(samples_t **s) { *s = &samples; }
+void audio_samples(samples_t **s) {
+  assert(s && "audio_samples: return value must be non-null");
+  *s = &samples;
+}
 
 void audio_times(float *total, float *now) {
-  ma_sound_get_cursor_in_seconds(&sound, now);
-  ma_sound_get_length_in_seconds(&sound, total);
+  assert(now || total && "audio_time: one of total and now must be not null");
+  if (now) ma_sound_get_cursor_in_seconds(&sound, now);
+  if (total) ma_sound_get_length_in_seconds(&sound, total);
 }
 
 void audio_seek(float time) { ma_sound_seek_to_second(&sound, time); }
