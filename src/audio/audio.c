@@ -14,6 +14,7 @@ static ma_sound sound = {0};
 
 const ma_uint64 framespersample = 128;
 static samples_t samples = {0, 0};
+static loopregion_t region = {0, 0};
 
 static result_t audio_sample(void) {
   // TODO: how to assert sound and engine are initialized here?
@@ -134,3 +135,23 @@ void audio_times(float *total, float *now) {
 }
 
 void audio_seek(float time) { ma_sound_seek_to_second(&sound, time); }
+
+void audio_setloopregion(float a, float b) {
+  assert(a < b && "audio_setloop: begnning must be smaller than end");
+  region.a = a;
+  region.b = b;
+  ma_uint32 rate;
+  ma_sound_get_data_format(&sound, NULL, NULL, &rate, NULL, 0);
+
+  ma_uint32 start = (ma_uint32)(a)*rate;
+  ma_uint32 end = (ma_uint32)(b)*rate;
+  ma_data_source_set_loop_point_in_pcm_frames(sound.pDataSource, start, end);
+}
+
+void audio_setloop(bool loop) {
+  ma_data_source_set_looping(sound.pDataSource, loop);
+}
+
+void audio_islooping(bool *loop) {
+  *loop = (bool)ma_data_source_is_looping(sound.pDataSource);
+}
