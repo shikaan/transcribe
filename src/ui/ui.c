@@ -21,15 +21,24 @@
 #include <time.h>
 
 // Configuration
+// ---
+// These constants are elements we will turn into configuration once
+// configuration exists.
 static const float SCROLL_FACTOR = 16;
-static const float SCROLL_DIRECTION = -1;
+static const float SCROLLX_DIRECTION = -1;
 static const float SAMPLES_PER_WAVEBAR = 8;
+static const bool FOLLOW_PLAYHEAD = true;
 
 // Constants
+// ---
+// Constants that are hoisted to be used by more than one function.
 static const float MIN_ZOOM = 0.5;
 static const float MAX_ZOOM = 4;
 
-// UI Spacing Constants (multiply by theme->spacing to use)
+// UI Spacing Constants
+// ---
+// Shared spacing constants. They are meant to be used like
+//   theme->spacing * $VALUE
 static const float TITLEBARH = 6;
 static const float TIMELINEH = 4;
 static const float SPECTRUMH = 32;
@@ -38,6 +47,9 @@ static const float WAVEBARW = 0.5;
 static const float WAVEBARGAP = 0.25;
 
 // UI State
+// ---
+// Shared UI state. Each element of this list affects multiple components.
+// Handle with care.
 static char fmtbuf[16] = {0};
 static bool isempty = true;
 static bool isplaying = false;
@@ -50,6 +62,8 @@ static float zoom = 1.0f;
 static samples_t *samples = 0;
 
 #ifndef NDEBUG
+// This block exists uniquely not to break the UI when we load the app in debug
+// mode with a preloaded file.
 static char namebuf[1024] = "test.mp3";
 static string_t filename = {namebuf, 8};
 #else
@@ -77,23 +91,24 @@ static void openfile(void) {
 }
 
 // Recalculate scrollx. To be used after a zoom or a scroll event.
-static void scroll(void) {
+static void scroll(float delta, float direction) {
   const float barpx = theme->spacing * (WAVEBARW + WAVEBARGAP);
   const float tracklen =
       (float)samples->len * barpx * zoom / SAMPLES_PER_WAVEBAR;
-  const float newscrollx =
-      scrollx + SCROLL_DIRECTION * input.scrollx * SCROLL_FACTOR;
+  const float newscrollx = scrollx + direction * delta * SCROLL_FACTOR;
   scrollx = clamp(newscrollx, 0, tracklen - winw);
 }
 
+// Zooms in and recalculates scroll position
 static void zoomin(void) {
   zoom = clamp(zoom * 2, MIN_ZOOM, MAX_ZOOM);
-  scroll();
+  scroll(input.scrollx, SCROLLX_DIRECTION);
 }
 
+// Zooms out and recalculates scroll position
 static void zoomout(void) {
   zoom = clamp(zoom / 2, MIN_ZOOM, MAX_ZOOM);
-  scroll();
+  scroll(input.scrollx, SCROLLX_DIRECTION);
 }
 
 static void ui_zoom(float x, float y, float w, float h) {
@@ -213,6 +228,7 @@ static void ui_waveform(void) {
   // Playhead
   const float cursorw = theme->spacing;
   const float thickness = theme->spacing / 4;
+  const float deadzone = theme->spacing * 20;
 
   // Timeline
   const float sectopx = tracklen / totalsec;
@@ -223,7 +239,7 @@ static void ui_waveform(void) {
   const float timepad = theme->spacing / 4;
   const float tlsecperstride = 1 / zoom;
 
-  scroll();
+  scroll(input.scrollx, SCROLLX_DIRECTION);
 
   // Waveform
   gfx_rect(wavex, wavey, winw, waveh, theme->colors[COLOR_SPECTRUMBG]);
@@ -244,6 +260,12 @@ static void ui_waveform(void) {
       overlaps(wavex, wavey, winw, waveh, input.mousex, input.mousey)) {
     audio_seek((input.mousex + scrollx) * totalsec / tracklen);
     headx = input.mousex;
+  }
+
+  if (FOLLOW_PLAYHEAD && (headx > winw - deadzone)) {
+    // Using fixed scroll direction on purpose.
+    // This direction does NOT change with users' preference
+    scroll(-SCROLL_FACTOR, -1);
   }
 
   if (headx < winw) {
@@ -280,6 +302,12 @@ static void ui_waveform(void) {
   for (; linex < winw; linex += tlstride) {
     gfx_line(linex, timey, lineh, LINEDIR_V, theme->colors[COLOR_TEXTDIM]);
   }
+}
+
+static void stop(void) {
+  audio_stop();
+  if (FOLLOW_PLAYHEAD)
+    scrollx = 0;
 }
 
 static void ui_controls(void) {
@@ -357,7 +385,7 @@ static void ui_controls(void) {
              .icon = string(ICON_STOP),
              .background = theme->colors[COLOR_BARBG],
              .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
-             .onclick = audio_stop,
+             .onclick = stop,
          });
 }
 
@@ -400,6 +428,7 @@ static void ui_emptystate(void) {
 }
 
 void ui_app(void) {
+  // winw and winh need to be calculated on every frame to account for resizing
   const float scale = sapp_dpi_scale();
   winw = sapp_widthf() / scale;
   winh = sapp_heightf() / scale;
