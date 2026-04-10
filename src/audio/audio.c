@@ -41,13 +41,13 @@ static result_t audio_sample(void) {
     goto done;
   }
 
-  size_t sampleslen = nframes / framespersample;
+  size_t nsamples = nframes / framespersample;
   if (samples.buf) {
-    if (samples.len >= sampleslen) {
+    if (samples.len >= nsamples) {
       memset(samples.buf, 0, samples.len * sizeof(float));
-      samples.len = sampleslen;
+      samples.len = nsamples;
     } else {
-      samples.len = sampleslen;
+      samples.len = nsamples;
       samples.buf = realloc(samples.buf, samples.len * sizeof(float));
       if (!samples.buf) {
         res = ERR_AUDIO;
@@ -55,7 +55,7 @@ static result_t audio_sample(void) {
       }
     }
   } else {
-    samples.len = sampleslen;
+    samples.len = nsamples;
     samples.buf = malloc(samples.len * sizeof(float));
     if (!samples.buf) {
       res = ERR_AUDIO;
