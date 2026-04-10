@@ -98,6 +98,7 @@ result_t audio_open(const char *path) {
     return ERR_AUDIO_OPENFILE;
   }
 
+  ma_data_source_set_looping(sound.pDataSource, false);
   return audio_sample();
 }
 

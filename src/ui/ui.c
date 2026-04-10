@@ -1,6 +1,7 @@
 #include "ui.h"
 
 #include "ui/btn.c"
+#include "ui/tick.c"
 #include "ui/num.c"
 
 #include "audio/audio.h"
@@ -241,7 +242,6 @@ static void ui_waveform(void) {
 
   scroll(input.scrollx, SCROLLX_DIRECTION);
 
-  // Waveform
   gfx_rect(wavex, wavey, winw, waveh, theme->colors[COLOR_SPECTRUMBG]);
 
   const float waveoffset = fmodf(scrollx, barpx);
@@ -310,6 +310,11 @@ static void stop(void) {
     scrollx = 0;
 }
 
+static void setloop(bool value) {
+  audio_setloop(value);
+  audio_setloopregion(0, totalsec);
+}
+
 static void ui_controls(void) {
   isempty = totalsec <= 0;
 
@@ -371,13 +376,18 @@ static void ui_controls(void) {
              .onclick = isplaying ? audio_pause : audio_play,
          });
 
-  ui_btn(loopx, secbtny, secbtnw, secbtnh,
-         (btndesc_t){
-             .iconfont = FONT_ICONS_L,
-             .icon = string(ICON_LOOP),
-             .background = theme->colors[COLOR_BARBG],
-             .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
-         });
+  bool islooping;
+  audio_islooping(&islooping);
+
+  ui_tick(loopx, secbtny, secbtnw, secbtnh,
+          (tickdesc_t){.iconfont = FONT_ICONS_L,
+                       .icon = string(ICON_LOOP),
+                       .value = islooping,
+                       .background = {theme->colors[COLOR_BARBG],
+                                      theme->colors[COLOR_PRIMARY]},
+                       .foreground = {theme->colors[COLOR_TEXTHIGHLIGHT],
+                                      theme->colors[COLOR_BARBG]},
+                       .onchange = setloop});
 
   ui_btn(stopx, secbtny, secbtnw, secbtnh,
          (btndesc_t){
