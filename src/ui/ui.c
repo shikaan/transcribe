@@ -1,8 +1,8 @@
 #include "ui.h"
 
 #include "ui/btn.c"
-#include "ui/tick.c"
 #include "ui/num.c"
+#include "ui/tick.c"
 
 #include "audio/audio.h"
 #include "files/files.h"
@@ -54,6 +54,7 @@ static const float WAVEBARGAP = 0.25;
 static char fmtbuf[16] = {0};
 static bool isempty = true;
 static bool isplaying = false;
+static bool islooping = false;
 static float winw = 0;
 static float winh = 0;
 static float totalsec = 0;
@@ -211,8 +212,6 @@ static void ui_titlebar(void) {
 }
 
 static void ui_waveform(void) {
-  audio_samples(&samples);
-
   // Waveform
   const float wavey = theme->spacing * (TITLEBARH + TIMELINEH);
   const float wavex = 0;
@@ -262,13 +261,21 @@ static void ui_waveform(void) {
     headx = input.mousex;
   }
 
-  if (FOLLOW_PLAYHEAD && (headx > winw - deadzone)) {
-    // Using fixed scroll direction on purpose.
-    // This direction does NOT change with users' preference
-    scroll(-SCROLL_FACTOR, -1);
+  if (FOLLOW_PLAYHEAD && isplaying) {
+    // Using fixed scroll direction on purpose here: this direction does NOT
+    // change with users' preference.
+
+    // Scroll to the playhead when it's before beginning of the screen
+    if (headx < 0) {
+      scroll(-headx, -1);
+    }
+
+    if (headx > winw - deadzone) {
+      scroll(-SCROLL_FACTOR, -1);
+    }
   }
 
-  if (headx < winw) {
+  if (headx < winw && headx >= 0) {
     gfx_rect(headx - cursorw / 2 + thickness / 2, wavey, cursorw, cursorw,
              theme->colors[COLOR_PRIMARY]);
     gfx_rect(headx, wavey, thickness, waveh, theme->colors[COLOR_PRIMARY]);
@@ -376,9 +383,6 @@ static void ui_controls(void) {
              .onclick = isplaying ? audio_pause : audio_play,
          });
 
-  bool islooping;
-  audio_islooping(&islooping);
-
   ui_tick(loopx, secbtny, secbtnw, secbtnh,
           (tickdesc_t){.iconfont = FONT_ICONS_L,
                        .icon = string(ICON_LOOP),
@@ -443,7 +447,9 @@ void ui_app(void) {
   winw = sapp_widthf() / scale;
   winh = sapp_heightf() / scale;
   audio_isplaying(&isplaying);
+  audio_islooping(&islooping);
   audio_times(&totalsec, &currentsec);
+  audio_samples(&samples);
   isempty = totalsec <= 0;
 
   if (isempty) {
