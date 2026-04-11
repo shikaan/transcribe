@@ -15,6 +15,8 @@ typedef struct {
   float mousey;
   float scrollx;
   float scrolly;
+  float dragstartx;
+  float dragstarty;
   mousebtn_t mousebtn;
   bool clicked : 1;
   bool pressed : 1;

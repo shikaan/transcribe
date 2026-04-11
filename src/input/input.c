@@ -1,7 +1,21 @@
 #include "input.h"
 #include <stdio.h>
 
-input_t input = {0};
+const float UNSET = -1;
+
+input_t input = {
+    .mousex = UNSET,
+    .mousey = UNSET,
+    .dragstartx = UNSET,
+    .dragstarty = UNSET,
+    .scrollx = UNSET,
+    .scrolly = UNSET,
+    .down = 0,
+    .up = 0,
+    .clicked = 0,
+    .pressed = 0,
+    .mousebtn = EMOUSEBTN,
+};
 
 void input_event(const sapp_event *ev) {
   float scale = sapp_dpi_scale();
@@ -12,6 +26,10 @@ void input_event(const sapp_event *ev) {
     input.down = 1;
     input.pressed = 1;
     input.up = 0;
+    input.mousex = ev->mouse_x / scale;
+    input.mousey = ev->mouse_y / scale;
+    input.dragstartx = input.mousex;
+    input.dragstarty = input.mousey;
     break;
   case SAPP_EVENTTYPE_MOUSE_UP:
     input.mousebtn = (mousebtn_t)ev->mouse_button;
@@ -59,4 +77,8 @@ void input_done(void) {
   input.pressed = 0;
   input.scrollx = 0;
   input.scrolly = 0;
+  if (input.up) {
+    input.dragstartx = UNSET;
+    input.dragstarty = UNSET;
+  }
 }

@@ -13,6 +13,7 @@ enum {
   COLOR_TEXTLIGHT,
   COLOR_PRIMARY,
   COLOR_SPECTRUMBG,
+  COLOR_SELECTION,
 
   COLORS,
 };
@@ -46,6 +47,7 @@ static theme_t dark = {
             color(0x90, 0x96, 0xa1, 0xff), // COLOR_TEXTLIGHT
             color(0xf3, 0xa0, 0x24, 0xff), // COLOR_PRIMARY
             color(0x19, 0x1b, 0x20, 0xff), // COLOR_SPECTRUMBG
+            color(0xf3, 0xa0, 0x24, 0x0f), // COLOR_SELECTION
         },
     .spacing = 8,
 };

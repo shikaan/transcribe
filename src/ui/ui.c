@@ -62,6 +62,8 @@ static float currentsec = 0;
 static float scrollx = 0;
 static float zoom = 1.0f;
 static samples_t *samples = 0;
+static float loopa = 0;
+static float loopb = 0;
 
 #ifndef NDEBUG
 // This block exists uniquely not to break the UI when we load the app in debug
@@ -232,6 +234,7 @@ static void ui_waveform(void) {
 
   // Timeline
   const float sectopx = tracklen / totalsec;
+  const float pxtosec = totalsec / tracklen;
   const float timeliney = theme->spacing * TITLEBARH;
   const float timelineh = theme->spacing * TIMELINEH;
   const float lineh = theme->spacing;
@@ -242,6 +245,15 @@ static void ui_waveform(void) {
   scroll(input.scrollx, SCROLLX_DIRECTION);
 
   gfx_rect(wavex, wavey, winw, waveh, theme->colors[COLOR_SPECTRUMBG]);
+
+  // Loop region
+  if (islooping) {
+    float regx = loopa * sectopx - scrollx;
+    float regy = wavey;
+    float regw = loopb * sectopx - scrollx - regx;
+    float regh = waveh;
+    gfx_rect(regx, regy, regw, regh, theme->colors[COLOR_SELECTION]);
+  }
 
   const float waveoffset = fmodf(scrollx, barpx);
   size_t sample = (size_t)(scrollx / barpx) * samplestride;
@@ -254,11 +266,38 @@ static void ui_waveform(void) {
   }
 
   // Playhead
-  float headx = (tracklen * currentsec / totalsec) - scrollx;
-  if (input.pressed &&
-      overlaps(wavex, wavey, winw, waveh, input.mousex, input.mousey)) {
-    audio_seek((input.mousex + scrollx) * totalsec / tracklen);
-    headx = input.mousex;
+  float headx = currentsec * sectopx - scrollx;
+  if (overlaps(wavex, wavey, winw, waveh, input.mousex, input.mousey)) {
+    if (input.pressed) {
+      audio_seek((input.mousex + scrollx) * pxtosec);
+      headx = input.mousex;
+    }
+
+    const float minloopsize = sectopx / 60;
+    const bool dragging = (input.down && !input.pressed);
+    const bool done = (input.up && input.dragstartx > 0);
+
+    if (dragging || done) {
+      float selx = fminf(input.dragstartx, input.mousex);
+      float selw = fabsf(input.mousex - input.dragstartx);
+      gfx_rect(selx, wavey, selw, waveh, theme->colors[COLOR_SELECTION]);
+    }
+
+    if (done) {
+      float dx = fabsf(input.mousex - input.dragstartx);
+      if (dx > minloopsize) {
+        float a = (input.dragstartx + scrollx) * pxtosec;
+        float b = (input.mousex + scrollx) * pxtosec;
+        if (a > b) {
+          float t = a;
+          a = b;
+          b = t;
+        }
+        audio_setloopregion(a, b);
+        audio_seek(a);
+        audio_setloop(true);
+      }
+    }
   }
 
   if (FOLLOW_PLAYHEAD && isplaying) {
@@ -313,13 +352,9 @@ static void ui_waveform(void) {
 
 static void stop(void) {
   audio_stop();
+  audio_setloop(false);
   if (FOLLOW_PLAYHEAD)
     scrollx = 0;
-}
-
-static void setloop(bool value) {
-  audio_setloop(value);
-  audio_setloopregion(0, totalsec);
 }
 
 static void ui_controls(void) {
@@ -391,7 +426,7 @@ static void ui_controls(void) {
                                       theme->colors[COLOR_PRIMARY]},
                        .foreground = {theme->colors[COLOR_TEXTHIGHLIGHT],
                                       theme->colors[COLOR_BARBG]},
-                       .onchange = setloop});
+                       .onchange = audio_setloop});
 
   ui_btn(stopx, secbtny, secbtnw, secbtnh,
          (btndesc_t){
@@ -451,6 +486,7 @@ void ui_app(void) {
   audio_times(&totalsec, &currentsec);
   audio_samples(&samples);
   isempty = totalsec <= 0;
+  audio_loopregion(&loopa, &loopb);
 
   if (isempty) {
     ui_emptystate();
