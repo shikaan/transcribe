@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-enum { NSEGMENTS = 32, NLABEL = 16 };
+enum { NSEGMENTS = 32, NLABEL = 32 };
 
 uint64_t times[NSEGMENTS][1 << 20] = {0};
 size_t lens[NSEGMENTS] = {0};

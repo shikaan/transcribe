@@ -1,3 +1,6 @@
 [submodule "tools/sokol-tools"]
 	path = tools/sokol-tools
 	url = https://github.com/floooh/sokol-tools-bin
+[submodule "vnd/rubberband"]
+	path = vnd/rubberband
+	url = https://github.com/breakfastquay/rubberband

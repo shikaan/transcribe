@@ -80,6 +80,7 @@ static void openfile(void) {
   result_t r = files_open(pathbuf, len(pathbuf));
   // TODO: tell user why the file was not loaded (e.g., "Operation cancelled")
   if (r == ERR_FILES_CANCEL) {
+    puts(pathbuf);
     return;
   }
 
@@ -295,7 +296,7 @@ static void ui_waveform(void) {
         }
         audio_setloopregion(a, b);
         audio_seek(a);
-        audio_setloop(true);
+        audio_setlooping(true);
       }
     }
   }
@@ -352,7 +353,7 @@ static void ui_waveform(void) {
 
 static void stop(void) {
   audio_stop();
-  audio_setloop(false);
+  audio_setlooping(false);
   if (FOLLOW_PLAYHEAD)
     scrollx = 0;
 }
@@ -426,7 +427,7 @@ static void ui_controls(void) {
                                       theme->colors[COLOR_PRIMARY]},
                        .foreground = {theme->colors[COLOR_TEXTHIGHLIGHT],
                                       theme->colors[COLOR_BARBG]},
-                       .onchange = audio_setloop});
+                       .onchange = audio_setlooping});
 
   ui_btn(stopx, secbtny, secbtnw, secbtnh,
          (btndesc_t){

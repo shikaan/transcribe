@@ -28,7 +28,7 @@ COMMON_CFLAGS := -std=c11 \
 	-Wconversion \
 	-Wno-ignored-qualifiers \
 	-Wno-aggregate-return \
-	-I vnd -I src
+	-I vnd -I src -I vnd/rubberband
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
@@ -36,7 +36,8 @@ ifeq ($(UNAME_S),Darwin)
     SOKOL_BACKEND := SOKOL_METAL
     SOKOL_CC      := $(CC) -x objective-c
     SOKOL_LDFLAGS := -framework Cocoa -framework Metal -framework MetalKit \
-                     -framework QuartzCore -framework AudioToolbox
+                     -framework QuartzCore -framework AudioToolbox \
+                     -framework Accelerate
 else ifeq ($(UNAME_S),Linux)
     SOKOL_BACKEND := SOKOL_GLCORE
     SOKOL_CC      := $(CC)
@@ -74,6 +75,9 @@ vnd/miniaudio.o: CFLAGS :=-O2
 
 vnd/tinyfiledialogs.o: CFLAGS := -O2
 
+vnd/rubberband.o: vnd/rubberband/single/RubberBandSingle.cpp
+	$(CXX) -O2 -c $< -o $@
+
 src/shader.h: src/shader.glsl
 	tools/sokol-tools/bin/osx_arm64/sokol-shdc \
 	--input src/shader.glsl \
@@ -83,9 +87,9 @@ src/shader.h: src/shader.glsl
 src/gfx/gfx.o: CFLAGS += -D$(SOKOL_BACKEND)
 src/gfx/gfx.o: src/gfx/gfx.c | src/gfx/shader.h
 
-src/main: LDFLAGS := $(SOKOL_LDFLAGS)
+src/main: LDFLAGS := $(SOKOL_LDFLAGS) -lc++
 src/main: CFLAGS += -D$(SOKOL_BACKEND)
-src/main: vnd/sokol.o vnd/miniaudio.o vnd/tinyfiledialogs.o \
+src/main: vnd/sokol.o vnd/miniaudio.o vnd/tinyfiledialogs.o vnd/rubberband.o \
 	src/gfx/gfx.o src/ui/ui.o src/audio/audio.o src/input/input.o src/prof/prof.o \
 	src/fmt/fmt.o \
 	| src/gfx/shader.h

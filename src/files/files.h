@@ -4,6 +4,7 @@
 #include "utils.h"
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 #include <tinyfiledialogs.h>
 
 static const char *ALLOWED_FILES[] = {"*.mp3"};
@@ -14,6 +15,7 @@ static inline result_t files_open(char *filepath, size_t maxlen) {
   char *path = tinyfd_openFileDialog("Open file...", 0, len(ALLOWED_FILES),
                                      ALLOWED_FILES, "Audio file", 0);
   if (!path) {
+    memset(filepath, 0, maxlen);
     return ERR_FILES_CANCEL;
   }
 
