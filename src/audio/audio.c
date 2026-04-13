@@ -135,8 +135,7 @@ static result_t stretch(tempo_t t) {
     while (avail > 0) {
       unsigned int remainder = (unsigned int)(outnframes - retrieved);
       chunk = min((unsigned int)avail, remainder);
-      if (!chunk)
-        break;
+      if (!chunk) break;
       torubberband(outplanar, slice, nchannels, retrieved);
       retrieved += rubberband_retrieve(rb, slice, chunk);
       avail = rubberband_available(rb);
@@ -176,19 +175,16 @@ static void awaitstretch(void) {
  * block. */
 static result_t sample(void) {
   unsigned int nrawsamples = (unsigned int)nframes * nchannels;
-  if (!samples_alloc(nrawsamples, &rawsamples))
-    return ERR_AUDIO;
+  if (!samples_alloc(nrawsamples, &rawsamples)) return ERR_AUDIO;
 
   ma_uint64 n;
   ma_data_source *src = ma_sound_get_data_source(&sound);
   ma_data_source_read_pcm_frames(src, rawsamples.buf, nframes, &n);
   ma_sound_seek_to_pcm_frame(&sound, 0); // rewind after reading
-  if (n != nframes)
-    return ERR_AUDIO_DECODE;
+  if (n != nframes) return ERR_AUDIO_DECODE;
 
   unsigned int nsamples = (unsigned int)nframes / FRAMES_PER_SAMPLE;
-  if (!samples_alloc(nsamples, &waveform))
-    return ERR_AUDIO;
+  if (!samples_alloc(nsamples, &waveform)) return ERR_AUDIO;
 
   for (unsigned int i = 0; i < waveform.len; i++) {
     float peak = 0.0f;
@@ -197,8 +193,7 @@ static result_t sample(void) {
       for (ma_uint32 c = 0; c < nchannels; c++)
         v += fabsf(rawsamples.buf[(i * FRAMES_PER_SAMPLE + j) * nchannels + c]);
       v /= (float)nchannels;
-      if (v > peak)
-        peak = v;
+      if (v > peak) peak = v;
     }
     waveform.buf[i] = peak;
   }
@@ -211,13 +206,11 @@ result_t audio_open(const char *path) {
   audio_deinit();
 
   result = ma_engine_init(NULL, &engine);
-  if (result != MA_SUCCESS)
-    return ERR_AUDIO_INIT;
+  if (result != MA_SUCCESS) return ERR_AUDIO_INIT;
 
   result = ma_sound_init_from_file(&engine, path, MA_SOUND_FLAG_DECODE, NULL,
                                    NULL, &sound);
-  if (result != MA_SUCCESS)
-    return ERR_AUDIO_OPENFILE;
+  if (result != MA_SUCCESS) return ERR_AUDIO_OPENFILE;
 
   ma_data_source_set_looping(sound.pDataSource, false);
   ma_format fmt;
@@ -225,8 +218,7 @@ result_t audio_open(const char *path) {
   ma_sound_get_length_in_pcm_frames(&sound, &nframes);
 
   result_t res = sample();
-  if (res != OK)
-    return res;
+  if (res != OK) return res;
 
   thread_create(&stretchthread, stretchall, NULL);
   stretching = true;

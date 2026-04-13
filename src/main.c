@@ -10,10 +10,10 @@
 #include "ui/ui.h"
 
 static void init(void) {
-  #ifdef DEBUG
-    audio_open("test1.mp3");
-    audio_settempo(0.5);
-  #endif
+#ifdef DEBUG
+  audio_open("test1.mp3");
+  audio_settempo(0.5);
+#endif
   gfx_init();
 }
 

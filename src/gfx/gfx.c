@@ -281,10 +281,8 @@ void gfx_textbox(string_t str, textdesc_t desc, float *w, float *h) {
     *w += (g.xadvance / scale) + hspacing;
     float gtop = g.yoff / scale;
     float gbot = (g.yoff + (g.y1 - g.y0)) / scale;
-    if (gtop < top)
-      top = gtop;
-    if (gbot > bot)
-      bot = gbot;
+    if (gtop < top) top = gtop;
+    if (gbot > bot) bot = gbot;
   }
   *h = bot - top;
 }
@@ -308,7 +306,6 @@ color_t gfx_lighten(color_t c, float amount) {
       c.a,
   };
 }
-
 
 void gfx_line(float x0, float y0, float len, linedir_t dir, color_t col) {
   const float thickness = 1;

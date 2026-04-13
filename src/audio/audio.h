@@ -32,5 +32,5 @@ void audio_loopregion(float *a, float *b);
 void audio_setlooping(bool loop);
 void audio_islooping(bool *loop);
 void audio_settempo(tempo_t t);
-void audio_tempo(tempo_t* t);
+void audio_tempo(tempo_t *t);
 void audio_deinit(void);

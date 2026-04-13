@@ -24,8 +24,7 @@ void ui_tick(float x, float y, float w, float h, tickdesc_t desc) {
   if (overlaps(x, y, w, h, input.mousex, input.mousey)) {
     background = input.down ? gfx_lighten(background, 0.08f)
                             : gfx_lighten(background, 0.15f);
-    if (input.clicked && desc.onchange)
-      desc.onchange(!desc.value);
+    if (input.clicked && desc.onchange) desc.onchange(!desc.value);
   }
   gfx_rect(x, y, w, h, background);
 

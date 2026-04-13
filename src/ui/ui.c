@@ -354,8 +354,7 @@ static void ui_waveform(void) {
 static void stop(void) {
   audio_stop();
   audio_setlooping(false);
-  if (FOLLOW_PLAYHEAD)
-    scrollx = 0;
+  if (FOLLOW_PLAYHEAD) scrollx = 0;
 }
 
 static void ui_controls(void) {

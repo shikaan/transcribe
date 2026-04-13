@@ -44,8 +44,7 @@ void prof_print(void) {
 
   puts("  === Metrics ===");
   for (int id = 0; id < NSEGMENTS; id++) {
-    if (lens[id] == 0)
-      continue;
+    if (lens[id] == 0) continue;
     uint64_t total = 0;
     for (unsigned int i = 0; i < lens[id]; i++)
       total += times[id][i];

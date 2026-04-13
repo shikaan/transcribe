@@ -30,8 +30,7 @@ size_t fmt_sectotime(float time, timefmt_t format, char *dest, size_t maxlen) {
 size_t fmt_basename(const char *path, char *dest, size_t maxlen) {
   const char *s = path;
   for (const char *p = path; *p; p++) {
-    if (*p == '/' || *p == '\\')
-      s = p + 1;
+    if (*p == '/' || *p == '\\') s = p + 1;
   }
   int len = snprintf(dest, maxlen, "%s", s);
   assert(len > 0 && "fmt_basename: cannot write filename");
@@ -39,7 +38,7 @@ size_t fmt_basename(const char *path, char *dest, size_t maxlen) {
   return min(maxlen - 1, (size_t)len);
 }
 
-size_t fmt_zoom(float zoom, char *dest, size_t maxlen) { 
+size_t fmt_zoom(float zoom, char *dest, size_t maxlen) {
   int len = snprintf(dest, maxlen, "%03.1fx", zoom);
   assert(len > 0 && "fmt_zoom: cannot write zoom");
 

@@ -23,8 +23,7 @@ static inline DWORD WINAPI threads_trampoline(LPVOID ctx) {
 
 static inline int thread_create(thread_t *t, thread_fn_t fn, void *arg) {
   threads_ctx_t *c = (threads_ctx_t *)malloc(sizeof(threads_ctx_t));
-  if (!c)
-    return -1;
+  if (!c) return -1;
   c->fn = fn;
   c->arg = arg;
   *t = CreateThread(NULL, 0, threads_trampoline, (LPVOID)c, 0, NULL);
@@ -60,13 +59,11 @@ static inline void *threads_trampoline(void *ctx) {
 
 static inline int thread_create(thread_t *t, thread_fn_t fn, void *arg) {
   threads_ctx_t *c = (threads_ctx_t *)malloc(sizeof(threads_ctx_t));
-  if (!c)
-    return -1;
+  if (!c) return -1;
   c->fn = fn;
   c->arg = arg;
   int r = pthread_create(t, NULL, threads_trampoline, (void *)c);
-  if (r)
-    free(c);
+  if (r) free(c);
   return r;
 }
 

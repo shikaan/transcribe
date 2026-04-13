@@ -118,3 +118,7 @@ start: src/main
 .PHONY: config
 config:
 	compiledb make
+
+.PHONY: fmt
+fmt:
+	find src -name '*.c' -o -name '*.h' | xargs clang-format -i
