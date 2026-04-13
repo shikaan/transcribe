@@ -1,14 +1,14 @@
 #pragma once
 #include <stdlib.h>
 
-/* Common function signature for thread workers */
+// Common function signature for thread workers
 typedef void (*thread_fn_t)(void *);
 
 #ifdef _WIN32
 #include <windows.h>
 typedef HANDLE thread_t;
 
-/* Trampoline context — bridges void(*)(void*) to DWORD WINAPI (*)(LPVOID) */
+// Trampoline context — bridges void(*)(void*) to DWORD WINAPI (*)(LPVOID)
 typedef struct {
   thread_fn_t fn;
   void *arg;
@@ -44,7 +44,7 @@ static inline int thread_join(thread_t t) {
 #include <pthread.h>
 typedef pthread_t thread_t;
 
-/* Trampoline context — bridges void(*)(void*) to void *(*)(void *) */
+// Trampoline context — bridges void(*)(void*) to void *(*)(void *)
 typedef struct {
   thread_fn_t fn;
   void *arg;

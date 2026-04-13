@@ -36,8 +36,8 @@ static tempo_t tempo = TEMPO_100;
 static thread_t stretchthread;
 static bool stretching = false;
 
-/* Allocates or reuses a samples buffer of `len` floats. Reuses the existing
- * allocation if capacity is sufficient; zeroes the content on reuse. */
+// Allocates or reuses a samples buffer of `len` floats. Reuses the existing
+// allocation if capacity is sufficient; zeroes the content on reuse.
 static void *samples_alloc(unsigned int len, samples_t *s) {
   if (s->buf) {
     if (s->cap >= len) {
@@ -56,16 +56,16 @@ static void *samples_alloc(unsigned int len, samples_t *s) {
   return s->buf;
 }
 
-/* Fills `slice[0..ch]` with pointers into each channel of `s` at `offset`.
- * Produces the float** layout rubberband expects for chunked processing. */
+// Fills `slice[0..ch]` with pointers into each channel of `s` at `offset`.
+// Produces the float** layout rubberband expects for chunked processing.
 static void torubberband(samples_t *s, float **slice, ma_uint32 ch,
                          ma_uint64 offset) {
   for (ma_uint32 c = 0; c < ch; c++)
     slice[c] = s[c].buf + offset;
 }
 
-/* Splits interleaved PCM into per-channel planar buffers: [L,R,L,R] ->
- * [[L,L],[R,R]]. */
+// Splits interleaved PCM into per-channel planar buffers: [L,R,L,R] ->
+// [[L,L],[R,R]].
 static void deinterleave(const float *in, samples_t *out, ma_uint64 len,
                          ma_uint32 ch) {
   for (ma_uint32 c = 0; c < ch; c++)
@@ -73,16 +73,16 @@ static void deinterleave(const float *in, samples_t *out, ma_uint64 len,
       out[c].buf[i] = in[i * ch + c];
 }
 
-/* Merges per-channel planar buffers back into interleaved PCM: [[L,L],[R,R]] ->
- * [L,R,L,R]. */
+// Merges per-channel planar buffers back into interleaved PCM: [[L,L],[R,R]] ->
+// [L,R,L,R].
 static void interleave(samples_t *in, float *out, ma_uint64 len, ma_uint32 ch) {
   for (ma_uint64 i = 0; i < len; i++)
     for (ma_uint32 c = 0; c < ch; c++)
       out[i * ch + c] = in[c].buf[i];
 }
 
-/* Time-stretches rawsamples to the given tempo using RubberBand (offline mode).
- * Writes interleaved output into samples[t]. */
+// Time-stretches rawsamples to the given tempo using RubberBand (offline mode).
+// Writes interleaved output into samples[t].
 static result_t stretch(tempo_t t) {
   static samples_t planars[TEMPOS][MAX_CHANNELS] = {0};
   static samples_t outplanars[TEMPOS][MAX_CHANNELS] = {0};
@@ -147,10 +147,10 @@ static result_t stretch(tempo_t t) {
   return OK;
 }
 
-/* Thread entry point: unpacks a tempo_t pointer and calls stretch(). */
+// Thread entry point: unpacks a tempo_t pointer and calls stretch().
 static void worker(void *arg) { stretch(*(tempo_t *)arg); }
 
-/* Spawns one thread per non-100% tempo and stretches them in parallel. */
+// Spawns one thread per non-100% tempo and stretches them in parallel.
 static void stretchall(void *none) {
   (void)none;
   // TEMPO_100 does not need stretching, it's the natural tempo.
@@ -162,7 +162,7 @@ static void stretchall(void *none) {
     thread_join(threads[i]);
 }
 
-/* Blocks until the background stretch thread completes, if one is running. */
+// Blocks until the background stretch thread completes, if one is running.
 static void awaitstretch(void) {
   if (stretching) {
     thread_join(stretchthread);
@@ -170,9 +170,9 @@ static void awaitstretch(void) {
   }
 }
 
-/* Reads all PCM frames from the decoded sound into rawsamples, then builds
- * the waveform overview by taking the peak amplitude per FRAMES_PER_SAMPLE
- * block. */
+// Reads all PCM frames from the decoded sound into rawsamples, then builds
+// the waveform overview by taking the peak amplitude per FRAMES_PER_SAMPLE
+// block.
 static result_t sample(void) {
   unsigned int nrawsamples = (unsigned int)nframes * nchannels;
   if (!samples_alloc(nrawsamples, &rawsamples)) return ERR_AUDIO;
