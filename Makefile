@@ -78,12 +78,14 @@ vnd/tinyfiledialogs.o: CFLAGS := -O2
 vnd/rubberband.o: vnd/rubberband/single/RubberBandSingle.cpp
 	$(CXX) -O2 -c $< -o $@
 
-src/shader.h: src/shader.glsl
+src/gfx/shader.h: src/gfx/shader.glsl
 	tools/sokol-tools/bin/osx_arm64/sokol-shdc \
-	--input src/shader.glsl \
+	--input $< \
 	--output $@ \
 	-l metal_macos
 
+FONT_OBJECTS := $(patsubst %.c,%.o,$(wildcard src/gfx/fonts/*@2x.c))
+src/gfx/fonts/%.o: CFLAGS := -O2
 src/gfx/gfx.o: CFLAGS += -D$(SOKOL_BACKEND)
 src/gfx/gfx.o: src/gfx/gfx.c | src/gfx/shader.h
 
@@ -91,12 +93,13 @@ src/main: LDFLAGS := $(SOKOL_LDFLAGS) -lc++
 src/main: CFLAGS += -D$(SOKOL_BACKEND)
 src/main: vnd/sokol.o vnd/miniaudio.o vnd/tinyfiledialogs.o vnd/rubberband.o \
 	src/gfx/gfx.o src/ui/ui.o src/audio/audio.o src/input/input.o src/prof/prof.o \
-	src/fmt/fmt.o \
+	src/fmt/fmt.o $(FONT_OBJECTS) \
 	| src/gfx/shader.h
 
 .PHONY: assets
 assets: tools/fonts/packer
-	rm src/gfx/fonts/*
+	mkdir -p src/gfx/fonts
+	rm -f src/gfx/fonts/*
 	tools/fonts/packer assets/Icons.ttf 14
 	tools/fonts/packer assets/Icons.ttf 20
 	tools/fonts/packer assets/Icons.ttf 32
@@ -119,6 +122,9 @@ start: src/main
 config:
 	compiledb make
 
-.PHONY: fmt
-fmt:
-	find src -name '*.c' -o -name '*.h' | xargs clang-format -i
+# The extra arg is required because clang-tidy breaks (due to elevating the
+# warning to error) before the rule could be disabled in .clang-tidy
+.PHONY: lint
+lint:
+	run-clang-tidy -fix -format -quiet \
+		-extra-arg=-Wno-unused-command-line-argument 'src/.*'

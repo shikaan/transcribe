@@ -1,0 +1,4 @@
+CompileFlags:
+  Add: [-DMA_INCLUDE_THREADING_API]
+
+

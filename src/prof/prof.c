@@ -13,13 +13,13 @@ size_t lens[NSEGMENTS] = {0};
 char labels[NSEGMENTS][NLABEL] = {0};
 
 static segment_t hash(const char *key) {
-  static unsigned long PRIME = 1099511628211U;
+  static unsigned long prime = 1099511628211U;
   unsigned long hash = 14695981039346656037U;
   const size_t len = strlen(key);
 
   for (size_t i = 0; i < len; i++) {
     hash ^= (unsigned long)(unsigned char)key[i];
-    hash *= PRIME;
+    hash *= prime;
   }
 
   return hash % NSEGMENTS;

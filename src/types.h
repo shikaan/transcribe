@@ -8,7 +8,7 @@ typedef struct {
 #define string(str) (string_t){str, sizeof(str) - 1}
 
 typedef enum {
-  OK,
+  OK = 0,
   ERROR = -1,
 
   ERR_AUDIO = -100,

@@ -17,7 +17,7 @@
 #include "fonts/JetBrainsMonoRegular.14@2x.h"
 #include "fonts/JetBrainsMonoRegular.20@2x.h"
 #include "shader.h"
-#include "string.h"
+#include "utils.h"
 
 enum {
   QUADS = FONTS + 1, // a buffer per font and one for rects
@@ -148,10 +148,10 @@ void gfx_drawstart(color_t color) {
 void gfx_drawend(void) {
 #define draw(qs, b, v)                                                         \
   {                                                                            \
-    size_t nverts = qs.len * VERTS_PER_QUAD;                                   \
+    size_t nverts = (qs).len * VERTS_PER_QUAD;                                 \
     if (nverts) {                                                              \
       sg_range range = {0};                                                    \
-      range.ptr = qs.buf;                                                      \
+      range.ptr = (qs).buf;                                                    \
       range.size = nverts * VERT_SIZE * sizeof(float);                         \
       sg_update_buffer(b, &range);                                             \
                                                                                \
@@ -195,10 +195,10 @@ void gfx_rect(float x, float y, float w, float h, color_t col) {
 
   // GPU coordinates are in NDC (normalized device coordinates) which is in the
   // -1, +1 range. The 2.0f scaling is used to map [0,1] -> [-1 +1]
-  float l = (x * scale / winw) * 2.0f - 1.0f;
-  float r = ((x + w) * scale / winw) * 2.0f - 1.0f;
-  float t = 1.0f - (y * scale / winh) * 2.0f;
-  float b = 1.0f - ((y + h) * scale / winh) * 2.0f;
+  float l = ((x * scale / winw) * 2.0F) - 1.0F;
+  float r = (((x + w) * scale / winw) * 2.0F) - 1.0F;
+  float t = 1.0F - ((y * scale / winh) * 2.0F);
+  float b = 1.0F - (((y + h) * scale / winh) * 2.0F);
 
   float quad[] = {
       // clang-format off
@@ -212,7 +212,7 @@ void gfx_rect(float x, float y, float w, float h, color_t col) {
   };
 
   size_t off = quads[RECT].len * VERT_SIZE * VERTS_PER_QUAD;
-  for (size_t i = 0; i < VERTS_PER_QUAD * VERT_SIZE; i++)
+  for (size_t i = 0; i < len(quad); i++)
     quads[RECT].buf[off + i] = quad[i];
   quads[RECT].len++;
 }
@@ -227,21 +227,21 @@ static float gfx_glyph(float x, float y, char c, fonttype_t font, color_t col) {
 
   // x,y are logical pixels; g.xoff/yoff are physical pixels
   // Scale cursor to physical, then add the already-physical offset
-  float px = x * scale + g.xoff;
-  float py = y * scale + g.yoff;
+  float px = (x * scale) + g.xoff;
+  float py = (y * scale) + g.yoff;
 
   // GPU coordinates are in NDC (normalized device coordinates) which is in the
   // -1, +1 range. The 2.0f scaling is used to map [0,1] -> [-1 +1]
-  float gw = (float)(g.x1 - g.x0) / winw * 2.0f;
-  float gh = (float)(g.y1 - g.y0) / winh * 2.0f;
-  float xyl = px / winw * 2.0f - 1.0f;
-  float xyt = 1.0f - py / winh * 2.0f;
+  float gw = (float)(g.x1 - g.x0) / winw * 2.0F;
+  float gh = (float)(g.y1 - g.y0) / winh * 2.0F;
+  float xyl = (px / winw * 2.0F) - 1.0F;
+  float xyt = 1.0F - (py / winh * 2.0F);
   float xyr = xyl + gw;
   float xyb = xyt - gh;
-  float uvl = g.x0 / 512.0f;
-  float uvt = g.y0 / 512.0f;
-  float uvr = g.x1 / 512.0f;
-  float uvb = g.y1 / 512.0f;
+  float uvl = (float)g.x0 / 512.0F;
+  float uvt = (float)g.y0 / 512.0F;
+  float uvr = (float)g.x1 / 512.0F;
+  float uvb = (float)g.y1 / 512.0F;
 
   float quad[] = {
       // clang-format off
@@ -255,7 +255,7 @@ static float gfx_glyph(float x, float y, char c, fonttype_t font, color_t col) {
   };
 
   size_t off = quads[font].len * VERT_SIZE * VERTS_PER_QUAD;
-  for (size_t i = 0; i < VERTS_PER_QUAD * VERT_SIZE; i++)
+  for (size_t i = 0; i < len(quad); i++)
     quads[font].buf[off + i] = quad[i];
   quads[font].len++;
 
@@ -280,15 +280,17 @@ void gfx_textbox(string_t str, textdesc_t desc, float *w, float *h) {
     float hspacing = i == str.len - 1 ? 0 : desc.hspacing;
     *w += (g.xadvance / scale) + hspacing;
     float gtop = g.yoff / scale;
-    float gbot = (g.yoff + (g.y1 - g.y0)) / scale;
-    if (gtop < top) top = gtop;
-    if (gbot > bot) bot = gbot;
+    float gbot = (g.yoff + (float)(g.y1 - g.y0)) / scale;
+    if (gtop < top)
+      top = gtop;
+    if (gbot > bot)
+      bot = gbot;
   }
   *h = bot - top;
 }
 
 color_t gfx_darken(color_t c, float amount) {
-  assert(amount >= 0 && amount <= 1.0f && "percentage should be in [0,1]");
+  assert(amount >= 0 && amount <= 1.0F && "percentage should be in [0,1]");
   return (color_t){
       c.r * (1 - amount),
       c.g * (1 - amount),
@@ -298,11 +300,11 @@ color_t gfx_darken(color_t c, float amount) {
 }
 
 color_t gfx_lighten(color_t c, float amount) {
-  assert(amount >= 0 && amount <= 1.0f && "percentage should be in [0,1]");
+  assert(amount >= 0 && amount <= 1.0F && "percentage should be in [0,1]");
   return (color_t){
-      c.r + (1 - c.r) * amount,
-      c.g + (1 - c.g) * amount,
-      c.b + (1 - c.b) * amount,
+      c.r + ((1 - c.r) * amount),
+      c.g + ((1 - c.g) * amount),
+      c.b + ((1 - c.b) * amount),
       c.a,
   };
 }

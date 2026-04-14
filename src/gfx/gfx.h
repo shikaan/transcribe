@@ -53,7 +53,7 @@ typedef enum {
 
 void gfx_init(void);
 void gfx_deinit(void);
-void gfx_drawstart(color_t bg);
+void gfx_drawstart(color_t color);
 void gfx_drawend(void);
 
 void gfx_rect(float x, float y, float w, float h, color_t col);
@@ -61,8 +61,8 @@ void gfx_text(float x, float y, string_t string, textdesc_t desc, color_t col);
 void gfx_textbox(string_t string, textdesc_t desc, float *w, float *h);
 
 // Color Utils
-color_t gfx_darken(color_t c, float f);
-color_t gfx_lighten(color_t c, float f);
+color_t gfx_darken(color_t c, float amount);
+color_t gfx_lighten(color_t c, float amount);
 
 // Higher-level functions
 void gfx_line(float x, float y, float len, linedir_t dir, color_t col);

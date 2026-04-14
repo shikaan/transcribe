@@ -15,12 +15,12 @@ enum { CHUNK_SIZE = 65536, MAX_CHANNELS = 4, FRAMES_PER_SAMPLE = 128 };
 
 static float tempos[TEMPOS] = {
     [TEMPO_100] = 1,
-    [TEMPO_50] = 0.5,
-    [TEMPO_25] = 0.25,
-    [TEMPO_75] = 0.75,
+    [TEMPO_50] = 0.5F,
+    [TEMPO_25] = 0.25F,
+    [TEMPO_75] = 0.75F,
 };
 
-static ma_result result = {0};
+static ma_result maresult = {0};
 static ma_engine engine = {0};
 static ma_sound sound = {0};
 static ma_audio_buffer audio = {0};
@@ -44,7 +44,12 @@ static void *samples_alloc(unsigned int len, samples_t *s) {
       memset(s->buf, 0, s->len * sizeof(float));
       s->len = len;
     } else {
-      s->buf = realloc(s->buf, len * sizeof(float));
+      float *buf = realloc(s->buf, len * sizeof(float));
+      if (!buf) {
+        // TODO: ERROR HANDLING
+        return s->buf;
+      }
+      s->buf = buf;
       s->len = len;
       s->cap = len;
     }
@@ -64,21 +69,23 @@ static void torubberband(samples_t *s, float **slice, ma_uint32 ch,
     slice[c] = s[c].buf + offset;
 }
 
-// Splits interleaved PCM into per-channel planar buffers: [L,R,L,R] ->
-// [[L,L],[R,R]].
+// Splits interleaved PCM into per-channel planar buffers:
+// [L,R,L,R] -> [[L,L],[R,R]]
 static void deinterleave(const float *in, samples_t *out, ma_uint64 len,
                          ma_uint32 ch) {
-  for (ma_uint32 c = 0; c < ch; c++)
+  for (ma_uint32 c = 0; c < ch; c++) {
     for (ma_uint64 i = 0; i < len; i++)
-      out[c].buf[i] = in[i * ch + c];
+      out[c].buf[i] = in[(i * ch) + c];
+  }
 }
 
 // Merges per-channel planar buffers back into interleaved PCM: [[L,L],[R,R]] ->
 // [L,R,L,R].
 static void interleave(samples_t *in, float *out, ma_uint64 len, ma_uint32 ch) {
-  for (ma_uint64 i = 0; i < len; i++)
+  for (ma_uint64 i = 0; i < len; i++) {
     for (ma_uint32 c = 0; c < ch; c++)
-      out[i * ch + c] = in[c].buf[i];
+      out[(i * ch) + c] = in[c].buf[i];
+  }
 }
 
 // Time-stretches rawsamples to the given tempo using RubberBand (offline mode).
@@ -155,11 +162,13 @@ static void stretchall(void *none) {
   (void)none;
   // TEMPO_100 does not need stretching, it's the natural tempo.
   tempo_t ts[] = {TEMPO_25, TEMPO_50, TEMPO_75};
-  thread_t threads[3];
+  thread_t threads[3] = {0};
   for (int i = 0; i < 3; i++)
     thread_create(&threads[i], worker, &ts[i]);
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 3; i++) {
+    assert(threads[i]); 
     thread_join(threads[i]);
+  }
 }
 
 // Blocks until the background stretch thread completes, if one is running.
@@ -186,12 +195,14 @@ static result_t sample(void) {
   unsigned int nsamples = (unsigned int)nframes / FRAMES_PER_SAMPLE;
   if (!samples_alloc(nsamples, &waveform)) return ERR_AUDIO;
 
-  for (unsigned int i = 0; i < waveform.len; i++) {
-    float peak = 0.0f;
+  for (ma_uint64 i = 0; i < waveform.len; i++) {
+    float peak = 0.0F;
     for (ma_uint64 j = 0; j < FRAMES_PER_SAMPLE; j++) {
-      float v = 0.0f;
-      for (ma_uint32 c = 0; c < nchannels; c++)
-        v += fabsf(rawsamples.buf[(i * FRAMES_PER_SAMPLE + j) * nchannels + c]);
+      float v = 0.0F;
+      for (ma_uint32 c = 0; c < nchannels; c++) {
+        v += fabsf(
+            rawsamples.buf[(((i * FRAMES_PER_SAMPLE) + j) * nchannels) + c]);
+      }
       v /= (float)nchannels;
       if (v > peak) peak = v;
     }
@@ -205,20 +216,20 @@ result_t audio_open(const char *path) {
   assert(path && "audio_open: path must be non null");
   audio_deinit();
 
-  result = ma_engine_init(NULL, &engine);
-  if (result != MA_SUCCESS) return ERR_AUDIO_INIT;
+  maresult = ma_engine_init(NULL, &engine);
+  if (maresult != MA_SUCCESS) return ERR_AUDIO_INIT;
 
-  result = ma_sound_init_from_file(&engine, path, MA_SOUND_FLAG_DECODE, NULL,
+  maresult = ma_sound_init_from_file(&engine, path, MA_SOUND_FLAG_DECODE, NULL,
                                    NULL, &sound);
-  if (result != MA_SUCCESS) return ERR_AUDIO_OPENFILE;
+  if (maresult != MA_SUCCESS) return ERR_AUDIO_OPENFILE;
 
   ma_data_source_set_looping(sound.pDataSource, false);
   ma_format fmt;
   ma_sound_get_data_format(&sound, &fmt, &nchannels, &rate, NULL, 0);
   ma_sound_get_length_in_pcm_frames(&sound, &nframes);
 
-  result_t res = sample();
-  if (res != OK) return res;
+  result_t result = sample();
+  if (result != OK) return result;
 
   thread_create(&stretchthread, stretchall, NULL);
   stretching = true;
@@ -235,9 +246,9 @@ void audio_stop(void) {
   ma_sound_seek_to_pcm_frame(&sound, 0);
 }
 
-void audio_isplaying(bool *b) {
-  assert(b && "audio_isplaying: return value must be non-null");
-  *b = ma_sound_is_playing(&sound);
+void audio_isplaying(bool *isplaying) {
+  assert(isplaying && "audio_isplaying: return value must be non-null");
+  *isplaying = ma_sound_is_playing(&sound);
 }
 
 void audio_deinit(void) {
@@ -283,7 +294,8 @@ void audio_setloopregion(float a, float b) {
 }
 
 void audio_loopregion(float *a, float *b) {
-  ma_uint64 start, end;
+  ma_uint64 start;
+  ma_uint64 end;
   ma_data_source_get_loop_point_in_pcm_frames(sound.pDataSource, &start, &end);
   *a = (float)start / (float)rate * tempos[tempo];
   *b = (float)end / (float)rate * tempos[tempo];
@@ -300,7 +312,8 @@ void audio_islooping(bool *loop) {
 void audio_settempo(tempo_t t) {
   awaitstretch();
   // Read previous state to restore it after switching to stretched track
-  float la = 0, lb = 0;
+  float la = 0;
+  float lb = 0;
   bool looping = false;
   float now = 0;
   audio_loopregion(&la, &lb);
@@ -313,11 +326,11 @@ void audio_settempo(tempo_t t) {
       ma_format_f32, nchannels, samples[t].len, samples[t].buf, NULL);
   ma_audio_buffer_init(&cfg, &audio);
 
-  result = ma_sound_init_from_data_source(
+  maresult = ma_sound_init_from_data_source(
       &engine, &audio, MA_SOUND_FLAG_NO_PITCH | MA_SOUND_FLAG_NO_SPATIALIZATION,
       NULL, &sound);
 
-  if (result == MA_SUCCESS) {
+  if (maresult == MA_SUCCESS) {
     tempo = t;
     if (looping && la < lb) {
       audio_setloopregion(la, lb);

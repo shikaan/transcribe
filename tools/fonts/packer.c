@@ -34,8 +34,9 @@ char *filename(const char *basename) {
   return strdup(basename);
 }
 
-// Writes a file on disk with the same output shape as xxd -i
-void writefile(const char *outpath, const char *file, float pts, float nfont) {
+// Writes a .h (extern declarations) and .c (definitions) pair for a font.
+void writefile(const char *dir, const char *file, float pts, float nfont,
+               const char *suffix) {
   memset(bitmap, 0, sizeof(bitmap));
   stbtt_BakeFontBitmap(fontbuf, 0, nfont, bitmap, NBITMAP, NBITMAP, 32, 96,
                        chardata);
@@ -43,36 +44,49 @@ void writefile(const char *outpath, const char *file, float pts, float nfont) {
   // Prevents adding a second pipeline
   bitmap[NBITMAP2 - 1] = 0xFF;
 
-  FILE *outputfile = fopen(outpath, "w");
-  assert(outputfile && "writefile: Unable to open outputfile");
-
   unsigned char *asbuf = (unsigned char *)chardata;
   size_t bufsz = sizeof(chardata);
 
-  printf("Packing font at %s...\n", outpath);
-  fprintf(outputfile,
-          "#pragma once\n"
-          "_Alignas(4) unsigned char baked%s%.0f[%lu] = {",
-          file, pts, bufsz);
-  for (int i = 0; i < bufsz; i++) {
-    if (i % 12 == 0) {
-      fprintf(outputfile, "\n ");
-    }
-    fprintf(outputfile, " 0x%02x,", asbuf[i]);
-  }
-  fprintf(outputfile, "\n};\n");
+  char hpath[256], cpath[256];
+  snprintf(hpath, sizeof(hpath), "%s/%s.%.0f%s.h", dir, file, pts, suffix);
+  snprintf(cpath, sizeof(cpath), "%s/%s.%.0f%s.c", dir, file, pts, suffix);
 
-  fprintf(outputfile, "unsigned char atlas%s%.0f[%d] = {", file, pts, NBITMAP2);
-  for (int i = 0; i < len(bitmap); i++) {
-    if (i % 12 == 0) {
-      fprintf(outputfile, "\n ");
-    }
-    fprintf(outputfile, " 0x%02x,", bitmap[i]);
-  }
-  fprintf(outputfile, "\n};\n");
-  printf("Packing font at %s... OK\n", outpath);
+  printf("Packing font at %s...\n", hpath);
 
-  fclose(outputfile);
+  FILE *hfile = fopen(hpath, "w");
+  assert(hfile && "writefile: Unable to open header file");
+  fprintf(hfile,
+          "#pragma once\n\n"
+          "extern _Alignas(4) unsigned char baked%s%.0f[%lu];\n"
+          "extern unsigned char atlas%s%.0f[%d];\n",
+          file, pts, bufsz, file, pts, NBITMAP2);
+  fclose(hfile);
+
+  FILE *cfile = fopen(cpath, "w");
+  assert(cfile && "writefile: Unable to open source file");
+  fprintf(cfile, "#include \"%s.%.0f%s.h\"\n\n", file, pts, suffix);
+
+  fprintf(cfile, "_Alignas(4) unsigned char baked%s%.0f[%lu] = {", file, pts,
+          bufsz);
+  for (size_t i = 0; i < bufsz; i++) {
+    if (i % 12 == 0) {
+      fprintf(cfile, "\n ");
+    }
+    fprintf(cfile, " 0x%02x,", asbuf[i]);
+  }
+  fprintf(cfile, "\n};\n\n");
+
+  fprintf(cfile, "unsigned char atlas%s%.0f[%d] = {", file, pts, NBITMAP2);
+  for (int i = 0; i < NBITMAP2; i++) {
+    if (i % 12 == 0) {
+      fprintf(cfile, "\n ");
+    }
+    fprintf(cfile, " 0x%02x,", bitmap[i]);
+  }
+  fprintf(cfile, "\n};\n");
+  fclose(cfile);
+
+  printf("Packing font at %s... OK\n", hpath);
 }
 
 int main(int argc, char **argv) {
@@ -93,7 +107,7 @@ int main(int argc, char **argv) {
   float nfont2x = nfont * 2.0f;
 
   char *file = filename(basename(fontpath));
-  char *dir = "src/gfx/fonts";
+  const char *dir = "src/gfx/fonts";
 
   FILE *fontfile = fopen(fontpath, "r");
   assert(fontfile && "main: Unable to open font file");
@@ -102,16 +116,12 @@ int main(int argc, char **argv) {
   assert(offset > 0 && "main: Unable to read opened font file");
   fclose(fontfile);
 
-  char outpath[256];
-
   puts("Baking font into bitmap...");
-  snprintf(outpath, sizeof(outpath), "%s/%s.%.0f.h", dir, file, points);
-  writefile(outpath, file, points, nfont);
+  writefile(dir, file, points, nfont, "");
   puts("Baking font into bitmap... OK");
 
   puts("Baking hi-res font into bitmap...");
-  snprintf(outpath, sizeof(outpath), "%s/%s.%.0f@2x.h", dir, file, points);
-  writefile(outpath, file, points, nfont2x);
+  writefile(dir, file, points, nfont2x, "@2x");
   puts("Baking hi-res font into bitmap... OK");
 
   return 0;

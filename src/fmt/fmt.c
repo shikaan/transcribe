@@ -7,7 +7,7 @@
 
 size_t fmt_sectotime(float time, timefmt_t format, char *dest, size_t maxlen) {
   int minutes = (int)time / 60;
-  float seconds = time - (float)minutes * 60;
+  float seconds = time - ((float)minutes * 60);
 
   const char *fmt;
   switch (format) {

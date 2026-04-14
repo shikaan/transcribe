@@ -14,6 +14,6 @@ static inline bool overlaps(float rx, float ry, float rw, float rh, float px,
   return px >= rx && px <= rx + rw && py >= ry && py <= ry + rh;
 }
 
-#define len(Arr) (sizeof(Arr) / sizeof(Arr[0]))
+#define len(Arr) (sizeof(Arr) / sizeof((Arr)[0]))
 
 #define uidbg(X, Y, W, H) gfx_rect(X, Y, W, H, (color_t){1, 0, 0, 1})

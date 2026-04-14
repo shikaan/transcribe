@@ -3,7 +3,7 @@
 #include "gfx/gfx.h"
 
 #define color(r, g, b, a)                                                      \
-  {(float)r / 0xff, (float)g / 0xff, (float)b / 0xff, (float)a / 0xff}
+  {(float)(r) / 0xff, (float)(g) / 0xff, (float)(b) / 0xff, (float)(a) / 0xff}
 
 enum {
   COLOR_BACKGROUND,

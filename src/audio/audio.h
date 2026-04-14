@@ -25,7 +25,7 @@ void audio_isplaying(bool *isplaying);
 void audio_pause(void);
 void audio_stop(void);
 void audio_samples(samples_t **samples);
-void audio_times(float *total, float *current);
+void audio_times(float *total, float *now);
 void audio_seek(float time);
 void audio_setloopregion(float a, float b);
 void audio_loopregion(float *a, float *b);

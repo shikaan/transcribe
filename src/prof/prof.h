@@ -3,11 +3,11 @@
 #ifndef NDEBUG
 typedef unsigned long segment_t;
 segment_t prof_segstart(const char *label);
-void prof_segend(segment_t seg);
+void prof_segend(segment_t id);
 void prof_print(void);
 
-#define _PROF_CAT(a, b) a##b
-#define _PROF_SEGNAME(line) _PROF_CAT(segment, line)
+#define PROF_CAT(a, b) a##b
+#define PROF_SEGNAME(line) _PROF_CAT(segment, line)
 
 #define prof_segment(Name, Block)                                              \
   do {                                                                         \
