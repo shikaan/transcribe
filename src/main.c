@@ -12,7 +12,6 @@
 static void init(void) {
 #ifdef DEBUG
   audio_open("/Users/manuel/dev/shikaan/transcriptions/test1.mp3");
-  // audio_settempo(0.5);
 #endif
   gfx_init();
 }

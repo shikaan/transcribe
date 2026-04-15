@@ -4,7 +4,6 @@
 #include "ui/num.c"
 #include "ui/tick.c"
 
-#include "debug.h"
 #include "audio/audio.h"
 #include "files/files.h"
 #include "fmt/fmt.h"
