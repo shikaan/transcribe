@@ -168,6 +168,8 @@ static void worker(void *arg) { stretch(*(tempo_t *)arg); }
 static void stretchall(void *none) {
   (void)none;
   // TEMPO_100 does not need stretching, it's the natural tempo.
+  samples[TEMPO_100] = rawsamples;
+
   tempo_t ts[] = {TEMPO_25, TEMPO_50, TEMPO_75};
   thread_t threads[3] = {0};
   for (int i = 0; i < 3; i++)
@@ -322,9 +324,11 @@ void audio_settempo(tempo_t t) {
   float la = 0;
   float lb = 0;
   bool looping = false;
+  bool playing = false;
   float now = 0;
   audio_loopregion(&la, &lb);
   audio_islooping(&looping);
+  audio_isplaying(&playing);
   audio_times(NULL, &now);
 
   ma_sound_uninit(&sound);
@@ -344,6 +348,9 @@ void audio_settempo(tempo_t t) {
       audio_setlooping(true);
     }
     audio_seek(now);
+    if (playing) {
+      audio_play();
+    }
   }
 
   // FIXME: error handling!

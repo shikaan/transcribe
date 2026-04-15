@@ -4,6 +4,7 @@
 #include "ui/num.c"
 #include "ui/tick.c"
 
+#include "debug.h"
 #include "audio/audio.h"
 #include "files/files.h"
 #include "fmt/fmt.h"
@@ -64,6 +65,7 @@ static float zoom = 1.0F;
 static samples_t *samples = 0;
 static float loopa = 0;
 static float loopb = 0;
+static tempo_t tempo = TEMPO_100;
 
 #ifndef NDEBUG
 // This block exists uniquely not to break the UI when we load the app in debug
@@ -363,6 +365,25 @@ static void stop(void) {
   }
 }
 
+static void ontempoincrease(void) {
+  if (tempo == MAX_TEMPO) return;
+  tempo_t new = (tempo_t)(((int)tempo - 1) % TEMPOS);
+  audio_settempo(new);
+}
+
+static void ontempodecrease(void) {
+  if (tempo == MIN_TEMPO) return;
+  tempo_t new = (tempo_t)(((int)tempo + 1) % TEMPOS);
+  audio_settempo(new);
+}
+
+static string_t tempo_labels[TEMPOS] = {
+  [TEMPO_100] = string("100%"),
+  [TEMPO_75] = string("75%"),
+  [TEMPO_50] = string("50%"),
+  [TEMPO_25] = string("25%"),
+};
+
 static void ui_controls(void) {
   isempty = totalsec <= 0;
 
@@ -406,12 +427,17 @@ static void ui_controls(void) {
   spacebetween = theme->spacing * 4;
 
   currentx = winw - padx - numberw;
-  ui_num(currentx, winh - ((height + numberh) / 2), numberw, numberh,
-         string("PITCH"), string("0 st"));
+  // ui_num(currentx, winh - ((height + numberh) / 2), numberw, numberh,
+  //        string("PITCH"), string("0 st"));
 
   currentx -= numberw + spacebetween;
   ui_num(currentx, winh - ((height + numberh) / 2), numberw, numberh,
-         string("TEMPO"), string("100%"));
+         (numdesc_t){
+             .label = string("TEMPO"),
+             .value = tempo_labels[tempo],
+             .onincrease = ontempoincrease,
+             .ondecrease = ontempodecrease,
+         });
 
   // Buttons
   spacebetween = theme->spacing * 2;
@@ -497,6 +523,7 @@ void ui_app(void) {
   audio_samples(&samples);
   isempty = totalsec <= 0;
   audio_loopregion(&loopa, &loopb);
+  audio_tempo(&tempo);
 
   if (isempty) {
     ui_emptystate();

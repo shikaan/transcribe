@@ -19,6 +19,8 @@ typedef enum {
   TEMPOS
 } tempo_t;
 
+enum { MIN_TEMPO = TEMPO_25, MAX_TEMPO = TEMPO_100 };
+
 result_t audio_open(const char *path);
 void audio_play(void);
 void audio_isplaying(bool *isplaying);

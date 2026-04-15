@@ -2,19 +2,27 @@
 #include "types.h"
 #include "ui/btn.c"
 #include "ui/theme.h"
+#include <stdio.h>
 
-void ui_num(float x, float y, float w, float h, string_t label,
-            string_t value) {
+typedef struct {
+  void (*onincrease)(void);
+  void (*ondecrease)(void);
+  string_t label;
+  string_t value;
+} numdesc_t;
+
+void ui_num(float x, float y, float w, float h, numdesc_t desc) {
   float txtw;
   float txth;
   textdesc_t ldesc = {FONT_SANS_S, 2.5F};
-  gfx_textbox(label, ldesc, &txtw, &txth);
-  gfx_text(x + (w / 2) - (txtw / 2), y + txth, label, ldesc,
+  gfx_textbox(desc.label, ldesc, &txtw, &txth);
+  gfx_text(x + (w / 2) - (txtw / 2), y + txth, desc.label, ldesc,
            theme->colors[COLOR_TEXTLIGHT]);
 
+
   textdesc_t vdesc = {FONT_MONO_M, 0};
-  gfx_textbox(value, vdesc, &txtw, &txth);
-  gfx_text(x + (w / 2) - (txtw / 2), y + h - (txth / 2), value, vdesc,
+  gfx_textbox(desc.value, vdesc, &txtw, &txth);
+  gfx_text(x + (w / 2) - (txtw / 2), y + h - (txth / 2), desc.value, vdesc,
            theme->colors[COLOR_TEXTLIGHT]);
 
   const float icosz = theme->spacing * 3;
@@ -24,11 +32,13 @@ void ui_num(float x, float y, float w, float h, string_t label,
                      .icon = string(ICON_MINUS),
                      .background = theme->colors[COLOR_BARBG],
                      .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
+                     .onclick = desc.ondecrease,
                      .pady = 4.0F});
 
   ui_btn(x + w - icosz, y + h - icosz, icosz, icosz,
          (btndesc_t){.iconfont = FONT_ICONS_M,
                      .icon = string(ICON_PLUS),
                      .background = theme->colors[COLOR_BARBG],
-                     .foreground = theme->colors[COLOR_TEXTHIGHLIGHT]});
+                     .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
+                     .onclick = desc.onincrease});
 }
