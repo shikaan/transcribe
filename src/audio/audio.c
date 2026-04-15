@@ -91,15 +91,11 @@ static void interleave(samples_t *in, float *out, ma_uint64 len, ma_uint32 ch) {
 // Time-stretches rawsamples to the given tempo using RubberBand (offline mode).
 // Writes interleaved output into samples[t].
 static result_t stretch(tempo_t t) {
-  static samples_t planars[TEMPOS][MAX_CHANNELS] = {0};
-  static samples_t outplanars[TEMPOS][MAX_CHANNELS] = {0};
   double ratio = 1.0 / (double)tempos[t];
-  samples_t *planar = planars[t];
-  samples_t *outplanar = outplanars[t];
+  samples_t planar[MAX_CHANNELS] = {0};
+  samples_t outplanar[MAX_CHANNELS] = {0};
   float *slice[nchannels];
-
-  for (int j = 0; j < MAX_CHANNELS; j++)
-    planar[j].len = 0;
+  result_t result = OK;
 
   int flags = RubberBandOptionProcessOffline | RubberBandOptionEngineFaster |
               RubberBandOptionThreadingNever;
@@ -112,14 +108,20 @@ static result_t stretch(tempo_t t) {
       (ma_uint64)((double)nframes * ratio) + rubberband_get_latency(rb);
 
   for (ma_uint32 c = 0; c < nchannels; c++) {
-    if (!samples_alloc((unsigned int)nframes, &planar[c]))
-      return ERR_AUDIO_ALLOC;
-    if (!samples_alloc((unsigned int)outnframes, &outplanar[c]))
-      return ERR_AUDIO_ALLOC;
+    if (!samples_alloc((unsigned int)nframes, &planar[c])) {
+      result = ERR_AUDIO_ALLOC;
+      goto cleanup;
+    }
+    if (!samples_alloc((unsigned int)outnframes, &outplanar[c])) {
+      result = ERR_AUDIO_ALLOC;
+      goto cleanup;
+    }
   }
 
-  if (!samples_alloc((unsigned int)(outnframes * nchannels), &samples[t]))
-    return ERR_AUDIO_ALLOC;
+  if (!samples_alloc((unsigned int)(outnframes * nchannels), &samples[t])) {
+    result = ERR_AUDIO_ALLOC;
+    goto cleanup;
+  }
 
   deinterleave(rawsamples.buf, planar, nframes, nchannels);
 
@@ -150,11 +152,16 @@ static result_t stretch(tempo_t t) {
   }
 
   interleave(outplanar, samples[t].buf, retrieved, nchannels);
+
+cleanup:
   rubberband_delete(rb);
-  return OK;
+  for (int c = 0; c < MAX_CHANNELS; c++) {
+    free(planar[c].buf);
+    free(outplanar[c].buf);
+  }
+  return result;
 }
 
-// Thread entry point: unpacks a tempo_t pointer and calls stretch().
 static void worker(void *arg) { stretch(*(tempo_t *)arg); }
 
 // Spawns one thread per non-100% tempo and stretches them in parallel.
