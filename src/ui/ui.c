@@ -366,21 +366,13 @@ static void stop(void) {
 }
 
 static void ontempoincrease(void) {
-  if (tempo == MAX_TEMPO)
-    return;
-  // FIXME: this has implicit knowledge of how things are laid out inside
-  // audio.c
-  tempo_t new = (tempo_t)(((int)tempo - 1) % TEMPOS);
-  audio_settempo(new);
+  if (tempo == MAX_TEMPO) return;
+  audio_settempo(tempo - 1);
 }
 
 static void ontempodecrease(void) {
-  if (tempo == MIN_TEMPO)
-    return;
-  // FIXME: this has implicit knowledge of how things are laid out inside
-  // audio.c
-  tempo_t new = (tempo_t)(((int)tempo + 1) % TEMPOS);
-  audio_settempo(new);
+  if (tempo == MIN_TEMPO) return;
+  audio_settempo(tempo + 1);
 }
 
 static void onpitchup(void) { audio_setpitch(clamp(pitch + 1, -12, 12)); }
