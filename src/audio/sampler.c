@@ -1,5 +1,4 @@
 #include "audio/audio.h"
-#include "audio/samples.c"
 
 #include "thread/thread.h"
 #include "utils.h"

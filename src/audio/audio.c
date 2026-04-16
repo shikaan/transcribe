@@ -2,7 +2,6 @@
 
 #include "audio/shifter.c"
 #include "audio/sampler.c"
-#include "audio/samples.c"
 
 #include "types.h"
 #include <assert.h>

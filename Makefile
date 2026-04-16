@@ -92,8 +92,8 @@ src/gfx/gfx.o: src/gfx/gfx.c | src/gfx/shader.h
 src/main: LDFLAGS := $(SOKOL_LDFLAGS) -lc++
 src/main: CFLAGS += -D$(SOKOL_BACKEND)
 src/main: vnd/sokol.o vnd/miniaudio.o vnd/tinyfiledialogs.o vnd/rubberband.o \
-	src/gfx/gfx.o src/ui/ui.o src/audio/audio.o src/input/input.o src/prof/prof.o \
-	src/fmt/fmt.o $(FONT_OBJECTS) \
+	src/gfx/gfx.o src/ui/ui.o src/audio/audio.o src/audio/samples.o \
+	src/input/input.o src/prof/prof.o src/fmt/fmt.o $(FONT_OBJECTS) \
 	| src/gfx/shader.h
 
 .PHONY: assets

@@ -25,6 +25,8 @@ enum {
   MAX_CHANNELS = 4,
 };
 
+void *samples_alloc(unsigned int len, samples_t *s); 
+
 result_t audio_open(const char *path);
 void audio_play(void);
 void audio_isplaying(bool *p);
