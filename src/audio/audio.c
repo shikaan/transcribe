@@ -1,4 +1,7 @@
 #include "audio/audio.h"
+
+#include "audio/shifter.c"
+
 #include "thread/thread.h"
 #include "types.h"
 #include "utils.h"
@@ -11,7 +14,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-enum { CHUNK_SIZE = 65536, MAX_CHANNELS = 4, FRAMES_PER_SAMPLE = 128 };
+enum {
+  CHUNK_SIZE = 65536,
+  FRAMES_PER_SAMPLE = 128,
+};
 
 static float tempos[TEMPOS] = {
     [TEMPO_100] = 1,
@@ -30,6 +36,7 @@ static samples_t rawsamples = {0, 0, 0};
 static samples_t waveform = {0, 0, 0};
 static samples_t samples[TEMPOS] = {0};
 static tempo_t tempo = TEMPO_100;
+static float pitch = 0.0F; // In semitones. 0.5f is a 1/4 tone.
 
 static ma_uint64 cursor = 0;
 static bool playing = false;
@@ -195,7 +202,7 @@ static void awaitstretch(void) {
 // Reads all PCM frames from the decoder into rawsamples, then builds
 // the waveform overview by taking the peak amplitude per FRAMES_PER_SAMPLE
 // block.
-static result_t sample(void) {
+static result_t rawsamples_init(void) {
   unsigned int nrawsamples = (unsigned int)nframes * nchannels;
   if (!samples_alloc(nrawsamples, &rawsamples))
     return ERR_AUDIO;
@@ -228,38 +235,40 @@ static result_t sample(void) {
   return OK;
 }
 
-// Feeds samples[tempo] into the output buffer, advancing cursor. Handles
-// looping and stops at end-of-track.
-void callback(ma_device *_dev, void *output, const void *_in,
-              ma_uint32 nchunk) {
+// Reads samples[tempo] through the shifter and writes to output
+void callback(ma_device *_dev, void *out, const void *_in,
+              ma_uint32 nchunkframes) {
   (void)_dev;
   (void)_in;
-  float *out = (float *)output;
+  float *output = (float *)out;
 
   if (!playing || samples[tempo].buf == NULL) {
-    memset(out, 0, (unsigned long)(nchunk * nchannels) * sizeof(float));
+    memset(output, 0, (size_t)(nchunkframes * nchannels) * sizeof(float));
     return;
   }
 
   ma_uint64 total = samples[tempo].len / nchannels;
-
-  for (ma_uint32 i = 0; i < nchunk; i++) {
+  for (ma_uint32 i = 0; i < nchunkframes; i++) {
     if (looping && loop_end > loop_start && cursor >= loop_end)
       cursor = loop_start;
 
     if (cursor >= total) {
       playing = false;
       cursor = 0;
-      memset(out + ((size_t)(i * nchannels)), 0,
-             (unsigned long)((nchunk - i) * nchannels) * sizeof(float));
+
+      // Shortcircuit and zeroout the input strem when we're at the end
+      for (unsigned int c = 0; c < nchannels; c++)
+        shifter_inzero(c, i, nchunkframes);
+
       return;
     }
 
     for (ma_uint32 c = 0; c < nchannels; c++)
-      out[(i * nchannels) + c] = samples[tempo].buf[(cursor * nchannels) + c];
+      shifter_inset(c, i, samples[tempo].buf[(cursor * nchannels) + c]);
 
     cursor++;
   }
+  shifter_shift(nchannels, nchunkframes, output);
 }
 
 result_t audio_open(const char *path) {
@@ -276,18 +285,21 @@ result_t audio_open(const char *path) {
   if (ma_decoder_get_length_in_pcm_frames(&decoder, &nframes) != MA_SUCCESS)
     return ERR_AUDIO_DECODE;
 
-  result_t result = sample();
-  if (result != OK)
-    return result;
+  result_t result = rawsamples_init();
+  if (result != OK) return result;
 
-  // TEMPO_100 is raw, no stretching needed. Set before starting device so the
-  // callback has valid data immediately.
+  // TEMPO_100 is raw, no stretching needed. 
   samples[TEMPO_100] = rawsamples;
+ 
+  pitch = 0;
+  ma_uint32 nperiod = 0;
+  shifter_init(nchannels, rate, &nperiod);
 
   ma_device_config cfg = ma_device_config_init(ma_device_type_playback);
   cfg.playback.format = ma_format_f32;
   cfg.playback.channels = nchannels;
   cfg.sampleRate = rate;
+  cfg.periodSizeInFrames = nperiod;
   cfg.dataCallback = callback;
   cfg.pUserData = NULL;
 
@@ -311,9 +323,9 @@ void audio_stop(void) {
   cursor = 0;
 }
 
-void audio_isplaying(bool *isplaying) {
-  assert(isplaying && "audio_isplaying: return value must be non-null");
-  *isplaying = playing;
+void audio_isplaying(bool *p) {
+  assert(p && "audio_isplaying: return value must be non-null");
+  *p = playing;
 }
 
 void audio_deinit(void) {
@@ -324,9 +336,11 @@ void audio_deinit(void) {
   looping = false;
   loop_start = 0;
   loop_end = 0;
+  pitch = 0;
 
   ma_device_uninit(&device);
   ma_decoder_uninit(&decoder);
+  shifter_uninit();
 
   waveform.len = 0;
   rawsamples.len = 0;
@@ -347,8 +361,8 @@ void audio_times(float *total, float *now) {
     *total = rate > 0 ? (float)nframes / (float)rate : 0;
 }
 
-void audio_seek(float time) {
-  cursor = (ma_uint64)(time / tempos[tempo] * (float)rate);
+void audio_seek(float seconds) {
+  cursor = (ma_uint64)(seconds / tempos[tempo] * (float)rate);
 }
 
 void audio_setloopregion(float a, float b) {
@@ -392,3 +406,13 @@ void audio_settempo(tempo_t t) {
 }
 
 void audio_tempo(tempo_t *t) { *t = tempo; }
+
+void audio_setpitch(float p) {
+  pitch = p;
+  shifter_setpitch(p);
+}
+
+void audio_pitch(float *p) {
+  assert(p && "audio_pitch: return value must be non-null");
+  *p = pitch;
+}

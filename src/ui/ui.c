@@ -65,6 +65,7 @@ static samples_t *samples = 0;
 static float loopa = 0;
 static float loopb = 0;
 static tempo_t tempo = TEMPO_100;
+static float pitch = 0;
 
 #ifndef NDEBUG
 // This block exists uniquely not to break the UI when we load the app in debug
@@ -365,22 +366,31 @@ static void stop(void) {
 }
 
 static void ontempoincrease(void) {
-  if (tempo == MAX_TEMPO) return;
+  if (tempo == MAX_TEMPO)
+    return;
+  // FIXME: this has implicit knowledge of how things are laid out inside
+  // audio.c
   tempo_t new = (tempo_t)(((int)tempo - 1) % TEMPOS);
   audio_settempo(new);
 }
 
 static void ontempodecrease(void) {
-  if (tempo == MIN_TEMPO) return;
+  if (tempo == MIN_TEMPO)
+    return;
+  // FIXME: this has implicit knowledge of how things are laid out inside
+  // audio.c
   tempo_t new = (tempo_t)(((int)tempo + 1) % TEMPOS);
   audio_settempo(new);
 }
 
+static void onpitchup(void) { audio_setpitch(clamp(pitch + 1, -12, 12)); }
+static void onpitchdown(void) { audio_setpitch(clamp(pitch - 1, -12, 12)); }
+
 static string_t tempo_labels[TEMPOS] = {
-  [TEMPO_100] = string("100%"),
-  [TEMPO_75] = string("75%"),
-  [TEMPO_50] = string("50%"),
-  [TEMPO_25] = string("25%"),
+    [TEMPO_100] = string("100%"),
+    [TEMPO_75] = string("75%"),
+    [TEMPO_50] = string("50%"),
+    [TEMPO_25] = string("25%"),
 };
 
 static void ui_controls(void) {
@@ -426,8 +436,16 @@ static void ui_controls(void) {
   spacebetween = theme->spacing * 4;
 
   currentx = winw - padx - numberw;
-  // ui_num(currentx, winh - ((height + numberh) / 2), numberw, numberh,
-  //        string("PITCH"), string("0 st"));
+  char pitchbuf[8] = {0};
+  string_t pitchv = {pitchbuf,
+                     (unsigned)snprintf(pitchbuf, 8, "%.0f st", pitch)};
+  ui_num(currentx, winh - ((height + numberh) / 2), numberw, numberh,
+         (numdesc_t){
+             .label = string("PITCH"),
+             .value = pitchv,
+             .onincrease = onpitchup,
+             .ondecrease = onpitchdown,
+         });
 
   currentx -= numberw + spacebetween;
   ui_num(currentx, winh - ((height + numberh) / 2), numberw, numberh,
@@ -523,6 +541,7 @@ void ui_app(void) {
   isempty = totalsec <= 0;
   audio_loopregion(&loopa, &loopb);
   audio_tempo(&tempo);
+  audio_pitch(&pitch);
 
   if (isempty) {
     ui_emptystate();
