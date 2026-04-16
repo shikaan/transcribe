@@ -41,4 +41,4 @@ void audio_settempo(tempo_t t);
 void audio_tempo(tempo_t *t);
 void audio_setpitch(float p);
 void audio_pitch(float *p);
-void audio_deinit(void);
+void audio_unint(void);
