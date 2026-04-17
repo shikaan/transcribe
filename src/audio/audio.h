@@ -6,8 +6,8 @@
 
 typedef struct {
   float *buf;
-  unsigned long len;
-  unsigned long cap;
+  unsigned long long len;
+  unsigned long long cap;
 } samples_t;
 
 typedef enum {

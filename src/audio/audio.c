@@ -21,7 +21,6 @@ static ma_uint32 nchannels = 2;
 static ma_uint64 nframes = 0;
 
 static samples_t rawsamples = {0};
-static samples_t *samples = {0};
 static samples_t waveform = {0};
 static tempo_t tempo = TEMPO_100;
 static float pitch = 0.0F; // In semitones. 0.5f is a 1/4 tone.
@@ -31,18 +30,6 @@ static bool playing = false;
 static bool looping = false;
 static ma_uint64 loop_start = 0;
 static ma_uint64 loop_end = 0;
-
-// Reads all PCM frames from the decoder into rawsamples
-static result_t rawsamples_init(void) {
-  unsigned int nrawsamples = (unsigned int)nframes * nchannels;
-  if (!samples_alloc(nrawsamples, &rawsamples))
-    return ERR_AUDIO;
-
-  ma_uint64 n;
-  ma_decoder_read_pcm_frames(&decoder, rawsamples.buf, nframes, &n);
-  ma_decoder_seek_to_pcm_frame(&decoder, 0);
-  return OK;
-}
 
 // Downsamples rawframes into a buffer to be used to render the waveform
 static result_t waveform_init(void) {
@@ -74,13 +61,15 @@ void callback(ma_device *_dev, void *out, const void *_in,
   (void)_dev;
   (void)_in;
   float *output = (float *)out;
+  samples_t samples;
+  sampler_samplesat(tempo, &samples);
 
-  if (!playing || sampler_samples[tempo].buf == NULL) {
+  if (!playing || samples.buf == NULL) {
     memset(output, 0, (size_t)(nchunkframes * nchannels) * sizeof(float));
     return;
   }
 
-  ma_uint64 total = samples[tempo].len / nchannels;
+  ma_uint64 total = samples.len / nchannels;
   for (ma_uint32 i = 0; i < nchunkframes; i++) {
     if (looping && loop_end > loop_start && cursor >= loop_end)
       cursor = loop_start;
@@ -97,7 +86,7 @@ void callback(ma_device *_dev, void *out, const void *_in,
     }
 
     for (ma_uint32 c = 0; c < nchannels; c++)
-      shifter_inset(c, i, samples[tempo].buf[(cursor * nchannels) + c]);
+      shifter_inset(c, i, samples.buf[(cursor * nchannels) + c]);
 
     cursor++;
   }
@@ -117,18 +106,22 @@ result_t audio_open(const char *path) {
 
   if (ma_decoder_get_length_in_pcm_frames(&decoder, &nframes) != MA_SUCCESS)
     return ERR_AUDIO_DECODE;
+ 
+  unsigned int nrawsamples = (unsigned int)nframes * nchannels;
+  if (!samples_alloc(nrawsamples, &rawsamples))
+    return ERR_AUDIO;
 
-  result_t result = rawsamples_init();
-  if (result != OK) return result;
-  
-  result = waveform_init();
+  ma_decoder_read_pcm_frames(&decoder, rawsamples.buf, nframes,
+                             &rawsamples.len);
+  ma_decoder_seek_to_pcm_frame(&decoder, 0);
+ 
+  result_t result = waveform_init();
   if (result != OK) return result;
    
   pitch = 0;
   ma_uint32 nperiod = 0;
   shifter_init(nchannels, rate, &nperiod);
-
-  sampler_init(nframes, nchannels, rate, &rawsamples, &samples);
+  sampler_init(nframes, nchannels, rate, &rawsamples);
 
   ma_device_config cfg = ma_device_config_init(ma_device_type_playback);
   cfg.playback.format = ma_format_f32;
@@ -169,14 +162,13 @@ void audio_unint(void) {
   loop_start = 0;
   loop_end = 0;
   pitch = 0;
+  waveform.len = 0;
+  rawsamples.len = 0;
 
   ma_device_uninit(&device);
   ma_decoder_uninit(&decoder);
   shifter_uninit();
   sampler_uninit();
-
-  waveform.len = 0;
-  rawsamples.len = 0;
 }
 
 void audio_samples(samples_t **s) {

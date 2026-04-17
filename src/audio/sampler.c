@@ -186,9 +186,7 @@ void sampler_uninit(void) {
 }
 
 void sampler_init(ma_uint64 nframes, ma_uint32 nchannels, ma_uint32 rate,
-                  const samples_t *raw_samples, samples_t **samples) {
-  *samples = sampler_samples;
-
+                  const samples_t *raw_samples) {
   // Static allocation needed to keep the reference stable when threaded
   static samplerargs_t sampler_args;
   sampler_args.nchannels = nchannels;
@@ -197,4 +195,8 @@ void sampler_init(ma_uint64 nframes, ma_uint32 nchannels, ma_uint32 rate,
   sampler_args.rawsamples = raw_samples;
 
   thread_create(&sampler_thread, sampler_stretchall, &sampler_args);
+}
+
+void sampler_samplesat(tempo_t t, samples_t* s) {
+  *s = sampler_samples[t];
 }
