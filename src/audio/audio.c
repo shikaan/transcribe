@@ -245,3 +245,5 @@ void audio_pitch(float *p) {
   assert(p && "audio_pitch: return value must be non-null");
   *p = pitch;
 }
+
+void audio_isstretching(bool *s) { sampler_isstretching(s); }

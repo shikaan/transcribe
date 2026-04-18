@@ -55,6 +55,7 @@ static char fmtbuf[16] = {0};
 static bool isempty = true;
 static bool isplaying = false;
 static bool islooping = false;
+static bool isstretching = false;
 static float winw = 0;
 static float winh = 0;
 static float totalsec = 0;
@@ -431,10 +432,10 @@ static void ui_controls(void) {
          (stepperdesc_t){.label = string("TEMPO"),
                      .value = tempo_labels[tempo],
                      .onincrease = ontempoincrease,
-                     .incdisabled = tempo == TEMPO_100,
+                     .incdisabled = tempo == TEMPO_100 || isstretching,
                      .incicon = string(ICON_PLUS),
                      .ondecrease = ontempodecrease,
-                     .decdisabled = tempo == TEMPO_25,
+                     .decdisabled = tempo == TEMPO_25 || isstretching,
                      .decicon = string(ICON_MINUS),
                      .changed = tempo != TEMPO_100});
 
@@ -524,6 +525,7 @@ void ui_app(void) {
   audio_loopregion(&loopa, &loopb);
   audio_tempo(&tempo);
   audio_pitch(&pitch);
+  audio_isstretching(&isstretching);
 
   if (isempty) {
     ui_emptystate();

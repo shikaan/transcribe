@@ -25,7 +25,7 @@ enum {
   MAX_CHANNELS = 4,
 };
 
-void *samples_alloc(unsigned int len, samples_t *s); 
+void *samples_alloc(unsigned int len, samples_t *s);
 
 result_t audio_open(const char *path);
 void audio_play(void);
@@ -44,3 +44,4 @@ void audio_tempo(tempo_t *t);
 void audio_setpitch(float p);
 void audio_pitch(float *p);
 void audio_unint(void);
+void audio_isstretching(bool *s);
