@@ -1,7 +1,7 @@
 #include "audio/audio.h"
 
-#include "audio/shifter.c"
 #include "audio/sampler.c"
+#include "audio/shifter.c"
 
 #include "types.h"
 #include <assert.h>
@@ -106,7 +106,7 @@ result_t audio_open(const char *path) {
 
   if (ma_decoder_get_length_in_pcm_frames(&decoder, &nframes) != MA_SUCCESS)
     return ERR_AUDIO_DECODE;
- 
+
   unsigned int nrawsamples = (unsigned int)nframes * nchannels;
   if (!samples_alloc(nrawsamples, &rawsamples))
     return ERR_AUDIO;
@@ -115,10 +115,11 @@ result_t audio_open(const char *path) {
   ma_decoder_read_pcm_frames(&decoder, rawsamples.buf, nframes, &frames_read);
   rawsamples.len = frames_read * nchannels;
   ma_decoder_seek_to_pcm_frame(&decoder, 0);
- 
+
   result_t result = waveform_init();
-  if (result != OK) return result;
-   
+  if (result != OK)
+    return result;
+
   pitch = 0;
   ma_uint32 nperiod = 0;
   shifter_init(nchannels, rate, &nperiod);
@@ -147,6 +148,10 @@ void audio_pause(void) { playing = false; }
 void audio_stop(void) {
   playing = false;
   cursor = 0;
+  // Stop device so no in-flight callback can race with shifter_reset()
+  ma_device_stop(&device);
+  shifter_reset();
+  ma_device_start(&device);
 }
 
 void audio_isplaying(bool *p) {
