@@ -16,10 +16,9 @@ typedef struct {
 } tickdesc_t;
 
 void ui_tick(float x, float y, float w, float h, tickdesc_t desc) {
-  float icow = 0;
-  float icoh = 0;
+  textmeasure_t ico = {0};
   textdesc_t icodesc = {desc.iconfont, 0};
-  gfx_textbox(desc.icon, icodesc, &icow, &icoh);
+  gfx_measuretext(desc.icon, icodesc, &ico);
 
   color_t background = desc.background[desc.value];
   if (overlaps(x, y, w, h, input.mousex, input.mousey)) {
@@ -30,9 +29,9 @@ void ui_tick(float x, float y, float w, float h, tickdesc_t desc) {
   }
   gfx_rect(x, y, w, h, background);
 
-  float currx = x + (w / 2) - (icow / 2);
+  float currx = x + (w / 2) - (ico.w / 2);
   float midy = y + (h / 2);
 
-  gfx_text(currx, midy + (icoh / 2), desc.icon, icodesc,
+  gfx_text(currx, midy + ((ico.fontasc - ico.fontdesc) / 2), desc.icon, icodesc,
            desc.foreground[desc.value]);
 }

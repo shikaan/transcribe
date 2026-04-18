@@ -117,6 +117,23 @@ void gfx_init(void) {
     atlasviews[font] = sg_make_view(&(sg_view_desc){
         .texture.image = atlases[font],
     });
+
+    float top = 0;
+    float bot = 0;
+    size_t ng = fonts[font].nglyphs / sizeof(glyph_t);
+    for (size_t i = 0; i < ng; i++) {
+      glyph_t g = fonts[font].glyphs[i];
+      if (g.x1 == g.x0 && g.y1 == g.y0)
+        continue;
+      float gtop = g.yoff;
+      float gbot = g.yoff + (float)(g.y1 - g.y0);
+      if (gtop < top)
+        top = gtop;
+      if (gbot > bot)
+        bot = gbot;
+    }
+    fonts[font].asc = -top;
+    fonts[font].desc = bot;
   }
 
   for (int i = 0; i < QUADS; i++) {
@@ -270,15 +287,15 @@ void gfx_text(float x, float y, string_t str, textdesc_t desc, color_t color) {
   }
 }
 
-void gfx_textbox(string_t str, textdesc_t desc, float *w, float *h) {
+void gfx_measuretext(string_t str, textdesc_t desc, textmeasure_t *measure) {
   float scale = sapp_dpi_scale();
-  *w = 0;
+  float w = 0;
   float top = 0;
   float bot = 0;
   for (size_t i = 0; i < str.len; i++) {
     glyph_t g = fonts[desc.font].glyphs[str.buf[i] - 32];
     float hspacing = i == str.len - 1 ? 0 : desc.hspacing;
-    *w += (g.xadvance / scale) + hspacing;
+    w += (g.xadvance / scale) + hspacing;
     float gtop = g.yoff / scale;
     float gbot = (g.yoff + (float)(g.y1 - g.y0)) / scale;
     if (gtop < top)
@@ -286,7 +303,10 @@ void gfx_textbox(string_t str, textdesc_t desc, float *w, float *h) {
     if (gbot > bot)
       bot = gbot;
   }
-  *h = bot - top;
+  measure->w = w;
+  measure->actualh = bot - top;
+  measure->fontasc = fonts[desc.font].asc / scale;
+  measure->fontdesc = fonts[desc.font].desc / scale;
 }
 
 color_t gfx_darken(color_t c, float amount) {

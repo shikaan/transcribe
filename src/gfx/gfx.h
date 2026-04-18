@@ -39,12 +39,21 @@ typedef struct {
   unsigned char *bitmap;
   unsigned int nglyphs;
   unsigned int nbitmap;
+  float asc;
+  float desc;
 } font_t;
 
 typedef struct {
   fonttype_t font;
   float hspacing;
 } textdesc_t;
+
+typedef struct {
+  float w;
+  float actualh;
+  float fontasc;
+  float fontdesc;
+} textmeasure_t;
 
 typedef enum {
   LINEDIR_H,
@@ -58,7 +67,7 @@ void gfx_drawend(void);
 
 void gfx_rect(float x, float y, float w, float h, color_t col);
 void gfx_text(float x, float y, string_t string, textdesc_t desc, color_t col);
-void gfx_textbox(string_t string, textdesc_t desc, float *w, float *h);
+void gfx_measuretext(string_t string, textdesc_t desc, textmeasure_t *measure);
 
 // Color Utils
 color_t gfx_darken(color_t c, float amount);

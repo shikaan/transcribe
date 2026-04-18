@@ -1,7 +1,7 @@
 #include "ui.h"
 
-#include "ui/btn.c"
-#include "ui/num.c"
+#include "ui/button.c"
+#include "ui/stepper.c"
 #include "ui/tick.c"
 
 #include "audio/audio.h"
@@ -118,67 +118,32 @@ static void zoomout(void) {
   scroll(input.scrollx, SCROLLX_DIRECTION);
 }
 
-static void ui_zoom(float x, float y, float w, float h) {
-  const float btnh = theme->spacing * 4;
-  const float btnw = btnh;
-
-  ui_btn(x, y + (h / 2) - (btnh / 2), btnw, btnh,
-         (btndesc_t){
-             .background = theme->colors[COLOR_BARBG],
-             .foreground = theme->colors[COLOR_TEXTLIGHT],
-             .icon = string(ICON_ZOOMOUT),
-             .iconfont = FONT_ICONS_M,
-             .onclick = zoomout,
-             .disabled = zoom <= MIN_ZOOM
-         });
-
-  string_t str = {fmtbuf, fmt_zoom(zoom, fmtbuf, sizeof(fmtbuf))};
-
-  textdesc_t desc = {FONT_MONO_M, 0};
-  float txtw;
-  float txth;
-  gfx_textbox(str, desc, &txtw, &txth);
-  gfx_text(x + (w / 2) - (txtw / 2), (h / 2) + (txth / 2), str, desc,
-           theme->colors[COLOR_TEXTLIGHT]);
-
-  ui_btn(x + w - btnw, y + (h / 2) - (btnh / 2), btnw, btnh,
-         (btndesc_t){
-             .background = theme->colors[COLOR_BARBG],
-             .foreground = theme->colors[COLOR_TEXTLIGHT],
-             .icon = string(ICON_ZOOMIN),
-             .iconfont = FONT_ICONS_M,
-             .onclick = zoomin,
-             .disabled = zoom >= MAX_ZOOM
-         });
-}
-
 static void ui_titlebar(void) {
   const float height = theme->spacing * TITLEBARH;
   const float padx = theme->spacing * BARPADX;
   const float iconspace = theme->spacing;
   const float spacebetween = theme->spacing * 2;
   const float sepheight = theme->spacing * 2;
-  float txtw = 0;
-  float txth = 0;
+  textmeasure_t m = {0};
 
   gfx_rect(0, 0, winw, height, theme->colors[COLOR_BARBG]);
 
   float currentx = 0;
   string_t puzzle = string(ICON_PUZZLE);
   textdesc_t desc = {FONT_ICONS_M, 0};
-  gfx_textbox(puzzle, desc, &txtw, &txth);
+  gfx_measuretext(puzzle, desc, &m);
   currentx += padx;
-  gfx_text(currentx, (height / 2) + (txth / 2), puzzle, desc,
-           theme->colors[COLOR_PRIMARY]);
+  gfx_text(currentx, (height / 2) + ((m.fontasc - m.fontdesc) / 2), puzzle,
+           desc, theme->colors[COLOR_PRIMARY]);
 
   string_t logo = string("Transcribling");
-  currentx += iconspace + txtw;
+  currentx += iconspace + m.w;
   desc.font = FONT_SANS_BOLD_M;
-  gfx_textbox(logo, desc, &txtw, &txth);
-  gfx_text(currentx, (height / 2) + (txth / 2), logo, desc,
+  gfx_measuretext(logo, desc, &m);
+  gfx_text(currentx, (height / 2) + ((m.fontasc - m.fontdesc) / 2), logo, desc,
            theme->colors[COLOR_TEXTHIGHLIGHT]);
 
-  currentx += txtw + padx;
+  currentx += m.w + padx;
   gfx_line(currentx, (height / 2) - (sepheight / 2), sepheight, LINEDIR_V,
            theme->colors[COLOR_TEXTDIM]);
 
@@ -186,8 +151,8 @@ static void ui_titlebar(void) {
   const float btnh = theme->spacing * 4;
 
   currentx += iconspace;
-  ui_btn(currentx, (height / 2) - (btnh / 2), btnw, btnh,
-         (btndesc_t){
+  ui_button(currentx, (height / 2) - (btnh / 2), btnw, btnh,
+         (buttondesc_t){
              .icon = string(ICON_OPEN),
              .iconfont = FONT_ICONS_M,
              .label = string("Open"),
@@ -203,19 +168,31 @@ static void ui_titlebar(void) {
 
   string_t fileicon = string(ICON_FILE);
   desc.font = FONT_ICONS_M;
-  gfx_textbox(fileicon, desc, &txtw, &txth);
+  gfx_measuretext(fileicon, desc, &m);
   currentx += spacebetween;
-  gfx_text(currentx, (height / 2) + (txth / 2), fileicon, desc,
-           theme->colors[COLOR_TEXTLIGHT]);
+  gfx_text(currentx, (height / 2) + ((m.fontasc - m.fontdesc) / 2), fileicon,
+           desc, theme->colors[COLOR_TEXTLIGHT]);
 
-  currentx += iconspace + txtw;
+  currentx += iconspace + m.w;
   desc.font = FONT_SANS_M;
-  gfx_textbox(logo, desc, &txtw, &txth);
-  gfx_text(currentx, (height / 2) + (txth / 2), filename, desc,
-           theme->colors[COLOR_TEXTLIGHT]);
+  gfx_measuretext(logo, desc, &m);
+  gfx_text(currentx, (height / 2) + ((m.fontasc - m.fontdesc) / 2), filename,
+           desc, theme->colors[COLOR_TEXTLIGHT]);
 
   const float zoomw = theme->spacing * 14;
-  ui_zoom(winw - padx - zoomw, (height / 2) - (height / 2), zoomw, height);
+  const float zoomh = theme->spacing * 3;
+  string_t value = {fmtbuf, fmt_zoom(zoom, fmtbuf, sizeof(fmtbuf))};
+  ui_stepper(winw - padx - zoomw, (height / 2) - (zoomh / 2), zoomw, zoomh,
+             (stepperdesc_t){
+                 .changed = zoom != 1.0F,
+                 .decdisabled = zoom <= MIN_ZOOM,
+                 .decicon = string(ICON_ZOOMOUT),
+                 .ondecrease = zoomout,
+                 .incdisabled = zoom >= MAX_ZOOM,
+                 .incicon = string(ICON_ZOOMIN),
+                 .onincrease = zoomin,
+                 .value = value,
+             });
 
   gfx_line(0, height - 1, winw, LINEDIR_H, theme->colors[COLOR_TEXTDIM]);
 }
@@ -408,8 +385,7 @@ static void ui_controls(void) {
   const float numberh = theme->spacing * 5;
   const float numberw = theme->spacing * 14;
 
-  float txtw = 0;
-  float txth = 0;
+  textmeasure_t m = {0};
   float currentx = 0;
   float spacebetween = 0;
   gfx_rect(0, y, winw, height, theme->colors[COLOR_BARBG]);
@@ -421,15 +397,16 @@ static void ui_controls(void) {
   };
   currentx += padx;
   textdesc_t desc = {FONT_MONO_L, 0};
-  gfx_textbox(timecode, desc, &txtw, &txth);
-  gfx_text(currentx, y + (height / 2) + (txth / 2), timecode, desc,
-           theme->colors[COLOR_TEXTHIGHLIGHT]);
+  gfx_measuretext(timecode, desc, &m);
+  gfx_text(currentx, y + (height / 2) + ((m.fontasc - m.fontdesc) / 2),
+           timecode, desc, theme->colors[COLOR_TEXTHIGHLIGHT]);
 
   timecode.len = fmt_sectotime(totalsec, FMT_TIMECODE, fmtbuf, len(fmtbuf));
-  currentx += txtw + theme->spacing * 2;
+  currentx += m.w + (theme->spacing * 2);
   desc.font = FONT_MONO_M;
-  gfx_text(currentx, y + (height / 2) + (txth / 2), timecode, desc,
-           theme->colors[COLOR_TEXTLIGHT]);
+  gfx_measuretext(timecode, desc, &m);
+  gfx_text(currentx, y + (height / 2) + ((m.fontasc - m.fontdesc) / 2),
+           timecode, desc, theme->colors[COLOR_TEXTLIGHT]);
 
   // Inputs
   spacebetween = theme->spacing * 4;
@@ -438,23 +415,27 @@ static void ui_controls(void) {
   char pitchbuf[8] = {0};
   string_t pitchv = {pitchbuf,
                      (unsigned)snprintf(pitchbuf, 8, "%+.0f st", pitch)};
-  ui_num(currentx, winh - ((height + numberh) / 2), numberw, numberh,
-         (numdesc_t){.label = string("PITCH"),
+  ui_stepper(currentx, winh - ((height + numberh) / 2), numberw, numberh,
+         (stepperdesc_t){.label = string("PITCH"),
                      .value = pitchv,
-                     .onincrease = onpitchup,
                      .ondecrease = onpitchdown,
                      .decdisabled = pitch <= -12.0F,
+                     .decicon = string(ICON_CHEVRONDOWN),
+                     .onincrease = onpitchup,
                      .incdisabled = pitch >= 12.0F,
+                     .incicon = string(ICON_CHEVRONUP),
                      .changed = pitch != 0.0F});
 
   currentx -= numberw + spacebetween;
-  ui_num(currentx, winh - ((height + numberh) / 2), numberw, numberh,
-         (numdesc_t){.label = string("TEMPO"),
+  ui_stepper(currentx, winh - ((height + numberh) / 2), numberw, numberh,
+         (stepperdesc_t){.label = string("TEMPO"),
                      .value = tempo_labels[tempo],
                      .onincrease = ontempoincrease,
+                     .incdisabled = tempo == TEMPO_100,
+                     .incicon = string(ICON_PLUS),
                      .ondecrease = ontempodecrease,
                      .decdisabled = tempo == TEMPO_25,
-                     .incdisabled = tempo == TEMPO_100,
+                     .decicon = string(ICON_MINUS),
                      .changed = tempo != TEMPO_100});
 
   // Buttons
@@ -462,8 +443,8 @@ static void ui_controls(void) {
   const float loopx = (winw / 2) + (primbtnw / 2) + spacebetween;
   const float stopx = (winw / 2) - (primbtnw / 2) - secbtnw - spacebetween;
 
-  ui_btn(primbtnx, primbtny, primbtnw, primbtnh,
-         (btndesc_t){
+  ui_button(primbtnx, primbtny, primbtnw, primbtnh,
+         (buttondesc_t){
              .iconfont = FONT_ICONS_XL,
              .icon = isplaying ? string(ICON_PAUSE) : string(ICON_PLAY),
              .background = theme->colors[COLOR_BARBG],
@@ -481,8 +462,8 @@ static void ui_controls(void) {
                                       theme->colors[COLOR_BARBG]},
                        .onchange = audio_setlooping});
 
-  ui_btn(stopx, secbtny, secbtnw, secbtnh,
-         (btndesc_t){
+  ui_button(stopx, secbtny, secbtnw, secbtnh,
+         (buttondesc_t){
              .iconfont = FONT_ICONS_L,
              .icon = string(ICON_STOP),
              .background = theme->colors[COLOR_BARBG],
@@ -498,28 +479,27 @@ static void ui_emptystate(void) {
   const float btnw = theme->spacing * 20;
   const float btnh = theme->spacing * 5;
 
-  float txtw = 0;
-  float txth = 0;
+  textmeasure_t m = {0};
 
   gfx_rect(0, 0, winw, height, theme->colors[COLOR_BARBG]);
 
   float currentx = 0;
   string_t puzzle = string(ICON_PUZZLE);
   textdesc_t desc = (textdesc_t){FONT_ICONS_M, 0};
-  gfx_textbox(puzzle, desc, &txtw, &txth);
+  gfx_measuretext(puzzle, desc, &m);
   currentx += padx;
-  gfx_text(currentx, (height / 2) + (txth / 2), puzzle, desc,
-           theme->colors[COLOR_PRIMARY]);
+  gfx_text(currentx, (height / 2) + ((m.fontasc - m.fontdesc) / 2), puzzle,
+           desc, theme->colors[COLOR_PRIMARY]);
 
   string_t logo = string("Transcribling");
-  currentx += iconspace + txtw;
+  currentx += iconspace + m.w;
   desc.font = FONT_SANS_BOLD_M;
-  gfx_textbox(logo, desc, &txtw, &txth);
-  gfx_text(currentx, (height / 2) + (txth / 2), logo, desc,
+  gfx_measuretext(logo, desc, &m);
+  gfx_text(currentx, (height / 2) + ((m.fontasc - m.fontdesc) / 2), logo, desc,
            theme->colors[COLOR_TEXTHIGHLIGHT]);
 
-  ui_btn((winw / 2) - (btnw / 2), (winh / 2) - (btnh / 2), btnw, btnh,
-         (btndesc_t){
+  ui_button((winw / 2) - (btnw / 2), (winh / 2) - (btnh / 2), btnw, btnh,
+         (buttondesc_t){
              .icon = string(ICON_OPEN),
              .iconfont = FONT_ICONS_M,
              .label = string("Open audio file"),

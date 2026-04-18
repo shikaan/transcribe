@@ -31,6 +31,9 @@ static char ICON_PAUSE[] = "j";
 static char ICON_STOP[] = "k";
 static char ICON_EQ[] = "l";
 static char ICON_CLOSE[] = "m";
+static char ICON_CHEVRONUP[] = "n";
+static char ICON_CHEVRONDOWN[] = "o";
+static char ICON_HELP[] = "p";
 
 typedef struct {
   color_t colors[COLORS];
