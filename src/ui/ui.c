@@ -272,36 +272,38 @@ static void ui_waveform(void) {
 
   // Playhead
   float headx = (currentsec * sectopx) - scrollx;
-  if (overlaps(wavex, wavey, winw, waveh, input.mousex, input.mousey) && input.mousebtn == MOUSEBTN_LEFT) {
-    if (input.pressed) {
-      audio_seek((input.mousex + scrollx) * pxtosec);
-      headx = input.mousex;
-    }
+  if (overlaps(wavex, wavey, winw, waveh, input.mousex, input.mousey)) {
+    input_setcursor(CURSOR_IBEAM);
+    if (input.mousebtn == MOUSEBTN_LEFT) {
+      if (input.pressed) {
+        audio_seek((input.mousex + scrollx) * pxtosec);
+        headx = input.mousex;
+      }
 
-    const float minloopsize = sectopx / 60;
-    const bool dragging =
-        (input.down && !input.pressed);
-    const bool done = (input.up && input.dragstartx > 0);
+      const float minloopsize = sectopx / 60;
+      const bool dragging = (input.down && !input.pressed);
+      const bool done = (input.up && input.dragstartx > 0);
 
-    if (dragging || done) {
-      float selx = fminf(input.dragstartx, input.mousex);
-      float selw = fabsf(input.mousex - input.dragstartx);
-      gfx_rect(selx, wavey, selw, waveh, theme->colors[COLOR_SELECTION]);
-    }
+      if (dragging || done) {
+        float selx = fminf(input.dragstartx, input.mousex);
+        float selw = fabsf(input.mousex - input.dragstartx);
+        gfx_rect(selx, wavey, selw, waveh, theme->colors[COLOR_SELECTION]);
+      }
 
-    if (done) {
-      float dx = fabsf(input.mousex - input.dragstartx);
-      if (dx > minloopsize) {
-        float a = (input.dragstartx + scrollx) * pxtosec;
-        float b = (input.mousex + scrollx) * pxtosec;
-        if (a > b) {
-          float t = a;
-          a = b;
-          b = t;
+      if (done) {
+        float dx = fabsf(input.mousex - input.dragstartx);
+        if (dx > minloopsize) {
+          float a = (input.dragstartx + scrollx) * pxtosec;
+          float b = (input.mousex + scrollx) * pxtosec;
+          if (a > b) {
+            float t = a;
+            a = b;
+            b = t;
+          }
+          audio_setloopregion(a, b);
+          audio_seek(a);
+          audio_setlooping(true);
         }
-        audio_setloopregion(a, b);
-        audio_seek(a);
-        audio_setlooping(true);
       }
     }
   }
@@ -367,12 +369,14 @@ static void stop(void) {
 }
 
 static void ontempoincrease(void) {
-  if (tempo == MAX_TEMPO) return;
+  if (tempo == MAX_TEMPO)
+    return;
   audio_settempo(tempo - 1);
 }
 
 static void ontempodecrease(void) {
-  if (tempo == MIN_TEMPO) return;
+  if (tempo == MIN_TEMPO)
+    return;
   audio_settempo(tempo + 1);
 }
 
@@ -433,23 +437,19 @@ static void ui_controls(void) {
   string_t pitchv = {pitchbuf,
                      (unsigned)snprintf(pitchbuf, 8, "%+.0f st", pitch)};
   ui_num(currentx, winh - ((height + numberh) / 2), numberw, numberh,
-         (numdesc_t){
-             .label = string("PITCH"),
-             .value = pitchv,
-             .onincrease = onpitchup,
-             .ondecrease = onpitchdown,
-             .changed = pitch != 0.0F
-         });
+         (numdesc_t){.label = string("PITCH"),
+                     .value = pitchv,
+                     .onincrease = onpitchup,
+                     .ondecrease = onpitchdown,
+                     .changed = pitch != 0.0F});
 
   currentx -= numberw + spacebetween;
   ui_num(currentx, winh - ((height + numberh) / 2), numberw, numberh,
-         (numdesc_t){
-             .label = string("TEMPO"),
-             .value = tempo_labels[tempo],
-             .onincrease = ontempoincrease,
-             .ondecrease = ontempodecrease,
-             .changed = tempo != TEMPO_100
-         });
+         (numdesc_t){.label = string("TEMPO"),
+                     .value = tempo_labels[tempo],
+                     .onincrease = ontempoincrease,
+                     .ondecrease = ontempodecrease,
+                     .changed = tempo != TEMPO_100});
 
   // Buttons
   spacebetween = theme->spacing * 2;
@@ -525,7 +525,8 @@ static void ui_emptystate(void) {
 }
 
 void ui_app(void) {
-  // winw and winh need to be calculated on every frame to account for resizing
+  // winw and winh need to be calculated on every frame to account for
+  // resizing
   const float scale = sapp_dpi_scale();
   winw = sapp_widthf() / scale;
   winh = sapp_heightf() / scale;
