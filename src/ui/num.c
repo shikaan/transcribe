@@ -10,6 +10,8 @@ typedef struct {
   string_t label;
   string_t value;
   bool changed;
+  bool incdisabled;
+  bool decdisabled;
 } numdesc_t;
 
 void ui_num(float x, float y, float w, float h, numdesc_t desc) {
@@ -35,6 +37,7 @@ void ui_num(float x, float y, float w, float h, numdesc_t desc) {
                      .background = theme->colors[COLOR_BARBG],
                      .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
                      .onclick = desc.ondecrease,
+                     .disabled = desc.decdisabled,
                      .pady = 4.0F});
 
   ui_btn(x + w - icosz, y + h - icosz, icosz, icosz,
@@ -42,5 +45,6 @@ void ui_num(float x, float y, float w, float h, numdesc_t desc) {
                      .icon = string(ICON_PLUS),
                      .background = theme->colors[COLOR_BARBG],
                      .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
+                     .disabled = desc.incdisabled,
                      .onclick = desc.onincrease});
 }

@@ -9,13 +9,14 @@
 #include <stdio.h>
 
 typedef struct {
-  string_t icon;
   fonttype_t iconfont;
-  string_t label;
   fonttype_t labelfont;
+  string_t icon;
+  string_t label;
   color_t background;
   color_t foreground;
   float pady;
+  bool disabled;
   void (*onclick)(void);
 } btndesc_t;
 
@@ -36,7 +37,7 @@ void ui_btn(float x, float y, float w, float h, btndesc_t desc) {
     gfx_textbox(desc.label, txtdesc, &txtw, &txth);
 
   color_t background = desc.background;
-  if (overlaps(x, y, w, h, input.mousex, input.mousey)) {
+  if (!desc.disabled && overlaps(x, y, w, h, input.mousex, input.mousey)) {
     input_setcursor(CURSOR_POINTER);
     background = input.down ? gfx_lighten(background, 0.08F)
                             : gfx_lighten(background, 0.15F);
@@ -51,11 +52,15 @@ void ui_btn(float x, float y, float w, float h, btndesc_t desc) {
   float midy = y + (h / 2);
 
   if (has_icon) {
+    color_t foreground =
+        desc.disabled ? gfx_setalpha(desc.foreground, 0.4F) : desc.foreground;
     gfx_text(currx, midy + (icoh / 2) + desc.pady, desc.icon, icodesc,
-             desc.foreground);
+             foreground);
   }
   if (has_label) {
+    color_t foreground =
+        desc.disabled ? gfx_setalpha(desc.foreground, 0.15F) : desc.foreground;
     gfx_text(currx + icow + gap, midy + (txth / 2) + desc.pady, desc.label,
-             txtdesc, desc.foreground);
+             txtdesc, foreground);
   }
 }

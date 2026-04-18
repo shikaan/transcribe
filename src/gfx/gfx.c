@@ -290,7 +290,7 @@ void gfx_textbox(string_t str, textdesc_t desc, float *w, float *h) {
 }
 
 color_t gfx_darken(color_t c, float amount) {
-  assert(amount >= 0 && amount <= 1.0F && "percentage should be in [0,1]");
+  assert(amount >= 0 && amount <= 1.0F && "gfx_darken: percentage should be in [0,1]");
   return (color_t){
       c.r * (1 - amount),
       c.g * (1 - amount),
@@ -300,12 +300,22 @@ color_t gfx_darken(color_t c, float amount) {
 }
 
 color_t gfx_lighten(color_t c, float amount) {
-  assert(amount >= 0 && amount <= 1.0F && "percentage should be in [0,1]");
+  assert(amount >= 0 && amount <= 1.0F && "gfx_lighten: percentage should be in [0,1]");
   return (color_t){
       c.r + ((1 - c.r) * amount),
       c.g + ((1 - c.g) * amount),
       c.b + ((1 - c.b) * amount),
       c.a,
+  };
+}
+
+color_t gfx_setalpha(color_t c, float amount) {
+  assert(amount >= 0 && amount <= 1.0F && "gfx_setalpha: percentage should be in [0,1]");
+  return (color_t){
+      c.r,
+      c.g,
+      c.b,
+      amount,
   };
 }
 

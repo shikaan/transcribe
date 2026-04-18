@@ -129,6 +129,7 @@ static void ui_zoom(float x, float y, float w, float h) {
              .icon = string(ICON_ZOOMOUT),
              .iconfont = FONT_ICONS_M,
              .onclick = zoomout,
+             .disabled = zoom <= MIN_ZOOM
          });
 
   string_t str = {fmtbuf, fmt_zoom(zoom, fmtbuf, sizeof(fmtbuf))};
@@ -147,6 +148,7 @@ static void ui_zoom(float x, float y, float w, float h) {
              .icon = string(ICON_ZOOMIN),
              .iconfont = FONT_ICONS_M,
              .onclick = zoomin,
+             .disabled = zoom >= MAX_ZOOM
          });
 }
 
@@ -441,6 +443,8 @@ static void ui_controls(void) {
                      .value = pitchv,
                      .onincrease = onpitchup,
                      .ondecrease = onpitchdown,
+                     .decdisabled = pitch <= -12.0F,
+                     .incdisabled = pitch >= 12.0F,
                      .changed = pitch != 0.0F});
 
   currentx -= numberw + spacebetween;
@@ -449,6 +453,8 @@ static void ui_controls(void) {
                      .value = tempo_labels[tempo],
                      .onincrease = ontempoincrease,
                      .ondecrease = ontempodecrease,
+                     .decdisabled = tempo == TEMPO_25,
+                     .incdisabled = tempo == TEMPO_100,
                      .changed = tempo != TEMPO_100});
 
   // Buttons

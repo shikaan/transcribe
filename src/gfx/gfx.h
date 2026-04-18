@@ -63,6 +63,7 @@ void gfx_textbox(string_t string, textdesc_t desc, float *w, float *h);
 // Color Utils
 color_t gfx_darken(color_t c, float amount);
 color_t gfx_lighten(color_t c, float amount);
+color_t gfx_setalpha(color_t c, float amount);
 
 // Higher-level functions
 void gfx_line(float x, float y, float len, linedir_t dir, color_t col);
