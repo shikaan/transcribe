@@ -8,7 +8,6 @@
 #include "files/files.h"
 #include "fmt/fmt.h"
 #include "gfx/gfx.h"
-#include "debug.h"
 #include "input/input.h"
 #include "theme.h"
 #include "types.h"
@@ -535,8 +534,6 @@ void ui_app(void) {
   audio_loopregion(&loopa, &loopb);
   audio_tempo(&tempo);
   audio_pitch(&pitch);
-
-  debugf(scrollx);
 
   if (isempty) {
     ui_emptystate();
