@@ -133,14 +133,14 @@ static void ui_titlebar(void) {
   textdesc_t desc = {FONT_ICONS_M, 0};
   gfx_measuretext(puzzle, desc, &m);
   currentx += padx;
-  gfx_text(currentx, (height / 2) + ((m.fontasc - m.fontdesc) / 2), puzzle,
+  gfx_text(currentx, (height / 2) + ((m.asc - m.desc) / 2), puzzle,
            desc, theme->colors[COLOR_PRIMARY]);
 
   string_t logo = string("Transcribling");
   currentx += iconspace + m.w;
   desc.font = FONT_SANS_BOLD_M;
   gfx_measuretext(logo, desc, &m);
-  gfx_text(currentx, (height / 2) + ((m.fontasc - m.fontdesc) / 2), logo, desc,
+  gfx_text(currentx, (height / 2) + ((m.asc - m.desc) / 2), logo, desc,
            theme->colors[COLOR_TEXTHIGHLIGHT]);
 
   currentx += m.w + padx;
@@ -170,13 +170,13 @@ static void ui_titlebar(void) {
   desc.font = FONT_ICONS_M;
   gfx_measuretext(fileicon, desc, &m);
   currentx += spacebetween;
-  gfx_text(currentx, (height / 2) + ((m.fontasc - m.fontdesc) / 2), fileicon,
+  gfx_text(currentx, (height / 2) + ((m.asc - m.desc) / 2), fileicon,
            desc, theme->colors[COLOR_TEXTLIGHT]);
 
   currentx += iconspace + m.w;
   desc.font = FONT_SANS_M;
   gfx_measuretext(logo, desc, &m);
-  gfx_text(currentx, (height / 2) + ((m.fontasc - m.fontdesc) / 2), filename,
+  gfx_text(currentx, (height / 2) + ((m.asc - m.desc) / 2), filename,
            desc, theme->colors[COLOR_TEXTLIGHT]);
 
   const float zoomw = theme->spacing * 14;
@@ -398,14 +398,14 @@ static void ui_controls(void) {
   currentx += padx;
   textdesc_t desc = {FONT_MONO_L, 0};
   gfx_measuretext(timecode, desc, &m);
-  gfx_text(currentx, y + (height / 2) + ((m.fontasc - m.fontdesc) / 2),
+  gfx_text(currentx, y + (height / 2) + ((m.asc - m.desc) / 2),
            timecode, desc, theme->colors[COLOR_TEXTHIGHLIGHT]);
 
   timecode.len = fmt_sectotime(totalsec, FMT_TIMECODE, fmtbuf, len(fmtbuf));
   currentx += m.w + (theme->spacing * 2);
   desc.font = FONT_MONO_M;
   gfx_measuretext(timecode, desc, &m);
-  gfx_text(currentx, y + (height / 2) + ((m.fontasc - m.fontdesc) / 2),
+  gfx_text(currentx, y + (height / 2) + ((m.asc - m.desc) / 2),
            timecode, desc, theme->colors[COLOR_TEXTLIGHT]);
 
   // Inputs
@@ -488,14 +488,14 @@ static void ui_emptystate(void) {
   textdesc_t desc = (textdesc_t){FONT_ICONS_M, 0};
   gfx_measuretext(puzzle, desc, &m);
   currentx += padx;
-  gfx_text(currentx, (height / 2) + ((m.fontasc - m.fontdesc) / 2), puzzle,
+  gfx_text(currentx, (height / 2) + ((m.asc - m.desc) / 2), puzzle,
            desc, theme->colors[COLOR_PRIMARY]);
 
   string_t logo = string("Transcribling");
   currentx += iconspace + m.w;
   desc.font = FONT_SANS_BOLD_M;
   gfx_measuretext(logo, desc, &m);
-  gfx_text(currentx, (height / 2) + ((m.fontasc - m.fontdesc) / 2), logo, desc,
+  gfx_text(currentx, (height / 2) + ((m.asc - m.desc) / 2), logo, desc,
            theme->colors[COLOR_TEXTHIGHLIGHT]);
 
   ui_button((winw / 2) - (btnw / 2), (winh / 2) - (btnh / 2), btnw, btnh,

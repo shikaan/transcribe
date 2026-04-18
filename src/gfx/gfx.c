@@ -304,9 +304,9 @@ void gfx_measuretext(string_t str, textdesc_t desc, textmeasure_t *measure) {
       bot = gbot;
   }
   measure->w = w;
-  measure->actualh = bot - top;
-  measure->fontasc = fonts[desc.font].asc / scale;
-  measure->fontdesc = fonts[desc.font].desc / scale;
+  measure->h = bot - top;
+  measure->asc = fonts[desc.font].asc / scale;
+  measure->desc = fonts[desc.font].desc / scale;
 }
 
 color_t gfx_darken(color_t c, float amount) {

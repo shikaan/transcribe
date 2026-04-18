@@ -49,10 +49,15 @@ typedef struct {
 } textdesc_t;
 
 typedef struct {
+  // Width of the string as drawn (sum of glyph advances).
   float w;
-  float actualh;
-  float fontasc;
-  float fontdesc;
+  // Tight height of this string's glyphs. Varies per string.
+  // Use asc/desc for string-independent vertical metrics.
+  float h;
+  // Font's max ascent above baseline. Constant per font.
+  float asc;
+  // Font's max descent below baseline. Constant per font.
+  float desc;
 } textmeasure_t;
 
 typedef enum {

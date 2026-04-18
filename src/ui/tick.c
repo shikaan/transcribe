@@ -32,6 +32,6 @@ void ui_tick(float x, float y, float w, float h, tickdesc_t desc) {
   float currx = x + (w / 2) - (ico.w / 2);
   float midy = y + (h / 2);
 
-  gfx_text(currx, midy + ((ico.fontasc - ico.fontdesc) / 2), desc.icon, icodesc,
+  gfx_text(currx, midy + ((ico.asc - ico.desc) / 2), desc.icon, icodesc,
            desc.foreground[desc.value]);
 }

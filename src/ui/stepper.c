@@ -19,12 +19,14 @@ typedef struct {
 void ui_stepper(float x, float y, float w, float h, stepperdesc_t desc) {
   const float icosz = theme->spacing * 3;
   textmeasure_t m = {0};
+  float vspace = 0;
 
   if (desc.label.len > 0) {
     textdesc_t ldesc = {FONT_SANS_S, 2.5F};
     gfx_measuretext(desc.label, ldesc, &m);
-    gfx_text(x + (w / 2) - (m.w / 2), y + m.fontasc, desc.label, ldesc,
+    gfx_text(x + (w / 2) - (m.w / 2), y + m.asc, desc.label, ldesc,
              theme->colors[COLOR_TEXTLIGHT]);
+    vspace += theme->spacing;
   }
 
   textdesc_t vdesc = {FONT_MONO_M, 0};
@@ -32,22 +34,22 @@ void ui_stepper(float x, float y, float w, float h, stepperdesc_t desc) {
                                : theme->colors[COLOR_TEXTLIGHT];
   gfx_measuretext(desc.value, vdesc, &m);
   float valmid = y + h - (icosz / 2);
-  gfx_text(x + (w / 2) - (m.w / 2),
-           valmid + ((m.fontasc - m.fontdesc) / 2), desc.value, vdesc, color);
+  gfx_text(x + (w / 2) - (m.w / 2), valmid + ((m.asc - m.desc) / 2) + vspace,
+           desc.value, vdesc, color);
 
-  ui_button(x, y + h - icosz, icosz, icosz,
-         (buttondesc_t){.iconfont = FONT_ICONS_M,
-                     .icon = desc.decicon,
-                     .background = theme->colors[COLOR_BARBG],
-                     .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
-                     .onclick = desc.ondecrease,
-                     .disabled = desc.decdisabled});
+  ui_button(x, y + h - icosz + vspace, icosz, icosz,
+            (buttondesc_t){.iconfont = FONT_ICONS_M,
+                           .icon = desc.decicon,
+                           .background = theme->colors[COLOR_BARBG],
+                           .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
+                           .onclick = desc.ondecrease,
+                           .disabled = desc.decdisabled});
 
-  ui_button(x + w - icosz, y + h - icosz, icosz, icosz,
-         (buttondesc_t){.iconfont = FONT_ICONS_M,
-                     .icon = desc.incicon,
-                     .background = theme->colors[COLOR_BARBG],
-                     .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
-                     .disabled = desc.incdisabled,
-                     .onclick = desc.onincrease});
+  ui_button(x + w - icosz, y + h - icosz + vspace, icosz, icosz,
+            (buttondesc_t){.iconfont = FONT_ICONS_M,
+                           .icon = desc.incicon,
+                           .background = theme->colors[COLOR_BARBG],
+                           .foreground = theme->colors[COLOR_TEXTHIGHLIGHT],
+                           .disabled = desc.incdisabled,
+                           .onclick = desc.onincrease});
 }

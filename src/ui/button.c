@@ -50,14 +50,14 @@ void ui_button(float x, float y, float w, float h, buttondesc_t desc) {
 
   if (has_icon) {
     color_t foreground =
-        desc.disabled ? gfx_setalpha(desc.foreground, 0.15F) : desc.foreground;
-    gfx_text(currx, midy + ((ico.fontasc - ico.fontdesc) / 2), desc.icon,
+        desc.disabled ? gfx_setalpha(desc.foreground, 0.3F) : desc.foreground;
+    gfx_text(currx, midy + ((ico.asc - ico.desc) / 2), desc.icon,
              icodesc, foreground);
   }
   if (has_label) {
     color_t foreground =
-        desc.disabled ? gfx_setalpha(desc.foreground, 0.15F) : desc.foreground;
-    gfx_text(currx + ico.w + gap, midy + ((txt.fontasc - txt.fontdesc) / 2),
+        desc.disabled ? gfx_setalpha(desc.foreground, 0.3F) : desc.foreground;
+    gfx_text(currx + ico.w + gap, midy + ((txt.asc - txt.desc) / 2),
              desc.label, txtdesc, foreground);
   }
 }
