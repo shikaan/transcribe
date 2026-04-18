@@ -1,20 +1,22 @@
 #include "input.h"
 #include <stdio.h>
 
-const float UNSET = -1;
+const float MOUSE_UNSET = -1;
+const float DRAGSTART_UNSET = -1;
+const float SCROLL_UNSET = 0;
 
 input_t input = {
-    .mousex = UNSET,
-    .mousey = UNSET,
-    .dragstartx = UNSET,
-    .dragstarty = UNSET,
-    .scrollx = UNSET,
-    .scrolly = UNSET,
+    .mousex = MOUSE_UNSET,
+    .mousey = MOUSE_UNSET,
+    .dragstartx = DRAGSTART_UNSET,
+    .dragstarty = DRAGSTART_UNSET,
+    .scrollx = SCROLL_UNSET,
+    .scrolly = SCROLL_UNSET,
     .down = 0,
     .up = 0,
     .clicked = 0,
     .pressed = 0,
-    .mousebtn = EMOUSEBTN,
+    .mousebtn = MOUSEBTN_INVALID,
 };
 
 void input_event(const sapp_event *ev) {
@@ -78,7 +80,7 @@ void input_done(void) {
   input.scrollx = 0;
   input.scrolly = 0;
   if (input.up) {
-    input.dragstartx = UNSET;
-    input.dragstarty = UNSET;
+    input.dragstartx = DRAGSTART_UNSET;
+    input.dragstarty = DRAGSTART_UNSET;
   }
 }
