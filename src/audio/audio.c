@@ -111,8 +111,9 @@ result_t audio_open(const char *path) {
   if (!samples_alloc(nrawsamples, &rawsamples))
     return ERR_AUDIO;
 
-  ma_decoder_read_pcm_frames(&decoder, rawsamples.buf, nframes,
-                             &rawsamples.len);
+  ma_uint64 frames_read = 0;
+  ma_decoder_read_pcm_frames(&decoder, rawsamples.buf, nframes, &frames_read);
+  rawsamples.len = frames_read * nchannels;
   ma_decoder_seek_to_pcm_frame(&decoder, 0);
  
   result_t result = waveform_init();
