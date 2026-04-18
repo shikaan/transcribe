@@ -6,6 +6,7 @@
 #include "ui/theme.h"
 #include "utils.h"
 #include <stdbool.h>
+#include <stdio.h>
 
 typedef struct {
   string_t icon;
@@ -25,18 +26,21 @@ void ui_btn(float x, float y, float w, float h, btndesc_t desc) {
   float icow = 0;
   float icoh = 0;
   textdesc_t icodesc = {desc.iconfont, 0};
-  if (has_icon) gfx_textbox(desc.icon, icodesc, &icow, &icoh);
+  if (has_icon)
+    gfx_textbox(desc.icon, icodesc, &icow, &icoh);
 
   float txtw = 0;
   float txth = 0;
   textdesc_t txtdesc = {desc.labelfont, 0};
-  if (has_label) gfx_textbox(desc.label, txtdesc, &txtw, &txth);
+  if (has_label)
+    gfx_textbox(desc.label, txtdesc, &txtw, &txth);
 
   color_t background = desc.background;
   if (overlaps(x, y, w, h, input.mousex, input.mousey)) {
     background = input.down ? gfx_lighten(background, 0.08F)
                             : gfx_lighten(background, 0.15F);
-    if (input.clicked && desc.onclick) desc.onclick();
+    if (input_lclicked() && desc.onclick)
+      desc.onclick();
   }
   gfx_rect(x, y, w, h, background);
 

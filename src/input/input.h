@@ -28,3 +28,7 @@ extern input_t input;
 
 void input_event(const sapp_event *ev);
 void input_done(void);
+
+static inline bool input_lclicked(void) {
+  return input.clicked && input.mousebtn == MOUSEBTN_LEFT;
+}

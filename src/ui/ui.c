@@ -272,14 +272,15 @@ static void ui_waveform(void) {
 
   // Playhead
   float headx = (currentsec * sectopx) - scrollx;
-  if (overlaps(wavex, wavey, winw, waveh, input.mousex, input.mousey)) {
+  if (overlaps(wavex, wavey, winw, waveh, input.mousex, input.mousey) && input.mousebtn == MOUSEBTN_LEFT) {
     if (input.pressed) {
       audio_seek((input.mousex + scrollx) * pxtosec);
       headx = input.mousex;
     }
 
     const float minloopsize = sectopx / 60;
-    const bool dragging = (input.down && !input.pressed);
+    const bool dragging =
+        (input.down && !input.pressed);
     const bool done = (input.up && input.dragstartx > 0);
 
     if (dragging || done) {
