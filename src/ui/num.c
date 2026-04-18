@@ -9,6 +9,7 @@ typedef struct {
   void (*ondecrease)(void);
   string_t label;
   string_t value;
+  bool changed;
 } numdesc_t;
 
 void ui_num(float x, float y, float w, float h, numdesc_t desc) {
@@ -19,11 +20,12 @@ void ui_num(float x, float y, float w, float h, numdesc_t desc) {
   gfx_text(x + (w / 2) - (txtw / 2), y + txth, desc.label, ldesc,
            theme->colors[COLOR_TEXTLIGHT]);
 
-
   textdesc_t vdesc = {FONT_MONO_M, 0};
+  color_t color = desc.changed ? theme->colors[COLOR_PRIMARY]
+                                 : theme->colors[COLOR_TEXTLIGHT];
   gfx_textbox(desc.value, vdesc, &txtw, &txth);
   gfx_text(x + (w / 2) - (txtw / 2), y + h - (txth / 2), desc.value, vdesc,
-           theme->colors[COLOR_TEXTLIGHT]);
+           color);
 
   const float icosz = theme->spacing * 3;
 

@@ -431,13 +431,14 @@ static void ui_controls(void) {
   currentx = winw - padx - numberw;
   char pitchbuf[8] = {0};
   string_t pitchv = {pitchbuf,
-                     (unsigned)snprintf(pitchbuf, 8, "%.0f st", pitch)};
+                     (unsigned)snprintf(pitchbuf, 8, "%+.0f st", pitch)};
   ui_num(currentx, winh - ((height + numberh) / 2), numberw, numberh,
          (numdesc_t){
              .label = string("PITCH"),
              .value = pitchv,
              .onincrease = onpitchup,
              .ondecrease = onpitchdown,
+             .changed = pitch != 0.0F
          });
 
   currentx -= numberw + spacebetween;
@@ -447,6 +448,7 @@ static void ui_controls(void) {
              .value = tempo_labels[tempo],
              .onincrease = ontempoincrease,
              .ondecrease = ontempodecrease,
+             .changed = tempo != TEMPO_100
          });
 
   // Buttons
