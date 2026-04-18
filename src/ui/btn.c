@@ -37,6 +37,7 @@ void ui_btn(float x, float y, float w, float h, btndesc_t desc) {
 
   color_t background = desc.background;
   if (overlaps(x, y, w, h, input.mousex, input.mousey)) {
+    input_setcursor(CURSOR_POINTER);
     background = input.down ? gfx_lighten(background, 0.08F)
                             : gfx_lighten(background, 0.15F);
     if (input_lclicked() && desc.onclick)

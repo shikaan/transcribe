@@ -4,11 +4,16 @@
 #include <stdbool.h>
 
 typedef enum {
+  MOUSEBTN_INVALID = SAPP_MOUSEBUTTON_INVALID,
   MOUSEBTN_LEFT = SAPP_MOUSEBUTTON_LEFT,
   MOUSEBTN_RIGHT = SAPP_MOUSEBUTTON_RIGHT,
   MOUSEBTN_MIDDLE = SAPP_MOUSEBUTTON_MIDDLE,
-  MOUSEBTN_INVALID = SAPP_MOUSEBUTTON_INVALID,
 } mousebtn_t;
+
+typedef enum {
+  CURSOR_DEFAULT = SAPP_MOUSECURSOR_DEFAULT,
+  CURSOR_POINTER = SAPP_MOUSECURSOR_POINTING_HAND,
+} cursor_t;
 
 typedef struct {
   float mousex;
@@ -28,6 +33,7 @@ extern input_t input;
 
 void input_event(const sapp_event *ev);
 void input_done(void);
+void input_setcursor(cursor_t c);
 
 static inline bool input_lclicked(void) {
   return input.clicked && input.mousebtn == MOUSEBTN_LEFT;

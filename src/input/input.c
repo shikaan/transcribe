@@ -1,6 +1,8 @@
 #include "input.h"
 #include <stdio.h>
 
+static cursor_t cursor;
+
 const float MOUSE_UNSET = -1;
 const float DRAGSTART_UNSET = -1;
 const float SCROLL_UNSET = 0;
@@ -74,6 +76,10 @@ void input_event(const sapp_event *ev) {
   }
 }
 
+void input_setcursor(cursor_t c) {
+  cursor = c;
+}
+
 void input_done(void) {
   input.clicked = 0;
   input.pressed = 0;
@@ -83,4 +89,6 @@ void input_done(void) {
     input.dragstartx = DRAGSTART_UNSET;
     input.dragstarty = DRAGSTART_UNSET;
   }
+  sapp_set_mouse_cursor((sapp_mouse_cursor)cursor);
+  cursor = CURSOR_DEFAULT;
 }

@@ -23,6 +23,7 @@ void ui_tick(float x, float y, float w, float h, tickdesc_t desc) {
 
   color_t background = desc.background[desc.value];
   if (overlaps(x, y, w, h, input.mousex, input.mousey)) {
+    input_setcursor(CURSOR_POINTER);
     background = input.down ? gfx_lighten(background, 0.08F)
                             : gfx_lighten(background, 0.15F);
     if (input_lclicked() && desc.onchange) desc.onchange(!desc.value);

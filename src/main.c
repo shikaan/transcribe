@@ -11,7 +11,7 @@
 
 static void init(void) {
 #ifdef DEBUG
-  audio_open("/Users/manuel/dev/shikaan/transcriptions/test1.mp3");
+  audio_open("/Users/manuel/dev/shikaan/transcriptions/test.mp3");
 #endif
   gfx_init();
 }
