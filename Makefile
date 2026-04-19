@@ -91,7 +91,7 @@ src/gfx/shader.h: src/gfx/shader.glsl
 	--output $@ \
 	-l metal_macos
 
-FONT_OBJECTS := $(patsubst %.c,%.o,$(wildcard src/gfx/fonts/*@2x.c))
+FONT_OBJECTS := $(patsubst %.c,%.o,$(wildcard src/gfx/fonts/*.c))
 src/gfx/fonts/%.o: CFLAGS := -O2
 src/gfx/gfx.o: CFLAGS += -D$(SOKOL_BACKEND)
 src/gfx/gfx.o: src/gfx/gfx.c | src/gfx/shader.h

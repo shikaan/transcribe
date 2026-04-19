@@ -57,8 +57,8 @@ void writefile(const char *dir, const char *file, float pts, float nfont,
 
   char hpath[256];
   char cpath[256];
-  snprintf(hpath, sizeof(hpath), "%s/%s.%.0f%s.h", dir, file, pts, suffix);
-  snprintf(cpath, sizeof(cpath), "%s/%s.%.0f%s.c", dir, file, pts, suffix);
+  snprintf(hpath, sizeof(hpath), "%s/%s%.0f%s.h", dir, file, pts, suffix);
+  snprintf(cpath, sizeof(cpath), "%s/%s%.0f%s.c", dir, file, pts, suffix);
 
   printf("Packing font at %s...\n", hpath);
 
@@ -66,17 +66,17 @@ void writefile(const char *dir, const char *file, float pts, float nfont,
   assert(hfile && "writefile: Unable to open header file");
   fprintf(hfile,
           "#pragma once\n\n"
-          "extern _Alignas(4) unsigned char baked%s%.0f[%lu];\n"
-          "extern unsigned char atlas%s%.0f[%d];\n",
-          file, pts, bufsz, file, pts, NBITMAP2);
+          "extern _Alignas(4) unsigned char baked%s%s%.0f[%lu];\n"
+          "extern unsigned char atlas%s%s%.0f[%d];\n",
+          file, suffix, pts, bufsz, file, suffix, pts, NBITMAP2);
   fclose(hfile);
 
   FILE *cfile = fopen(cpath, "w");
   assert(cfile && "writefile: Unable to open source file");
-  fprintf(cfile, "#include \"%s.%.0f%s.h\"\n\n", file, pts, suffix);
+  fprintf(cfile, "#include \"%s%.0f%s.h\"\n\n", file, pts, suffix);
 
-  fprintf(cfile, "_Alignas(4) unsigned char baked%s%.0f[%lu] = {", file, pts,
-          bufsz);
+  fprintf(cfile, "_Alignas(4) unsigned char baked%s%s%.0f[%lu] = {", file,
+          suffix, pts, bufsz);
   for (size_t i = 0; i < bufsz; i++) {
     if (i % 12 == 0) {
       fprintf(cfile, "\n ");
@@ -85,7 +85,8 @@ void writefile(const char *dir, const char *file, float pts, float nfont,
   }
   fprintf(cfile, "\n};\n\n");
 
-  fprintf(cfile, "unsigned char atlas%s%.0f[%d] = {", file, pts, NBITMAP2);
+  fprintf(cfile, "unsigned char atlas%s%s%.0f[%d] = {", file, suffix, pts,
+          NBITMAP2);
   for (int i = 0; i < NBITMAP2; i++) {
     if (i % 12 == 0) {
       fprintf(cfile, "\n ");
@@ -130,7 +131,7 @@ int main(int argc, char **argv) {
   puts("Baking font into bitmap... OK");
 
   puts("Baking hi-res font into bitmap...");
-  writefile(dir, file, points, nfont2x, "@2x");
+  writefile(dir, file, points, nfont2x, "hidpi");
   puts("Baking hi-res font into bitmap... OK");
 
   return 0;

@@ -7,15 +7,25 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "fonts/Icons.14@2x.h"
-#include "fonts/Icons.20@2x.h"
-#include "fonts/Icons.32@2x.h"
-#include "fonts/InterDisplayRegular.12@2x.h"
-#include "fonts/InterDisplayRegular.14@2x.h"
-#include "fonts/InterDisplaySemiBold.14@2x.h"
-#include "fonts/JetBrainsMonoRegular.12@2x.h"
-#include "fonts/JetBrainsMonoRegular.14@2x.h"
-#include "fonts/JetBrainsMonoRegular.20@2x.h"
+#include "fonts/Icons14.h"
+#include "fonts/Icons20.h"
+#include "fonts/Icons32.h"
+#include "fonts/InterDisplayRegular12.h"
+#include "fonts/InterDisplayRegular14.h"
+#include "fonts/InterDisplaySemiBold14.h"
+#include "fonts/JetBrainsMonoRegular12.h"
+#include "fonts/JetBrainsMonoRegular14.h"
+#include "fonts/JetBrainsMonoRegular20.h"
+
+#include "fonts/Icons14hidpi.h"
+#include "fonts/Icons20hidpi.h"
+#include "fonts/Icons32hidpi.h"
+#include "fonts/InterDisplayRegular12hidpi.h"
+#include "fonts/InterDisplayRegular14hidpi.h"
+#include "fonts/InterDisplaySemiBold14hidpi.h"
+#include "fonts/JetBrainsMonoRegular12hidpi.h"
+#include "fonts/JetBrainsMonoRegular14hidpi.h"
+#include "fonts/JetBrainsMonoRegular20hidpi.h"
 #include "shader.h"
 #include "utils.h"
 
@@ -31,46 +41,9 @@ typedef struct {
 
 static quads_t quads[QUADS];
 static sg_buffer buf[QUADS];
-
 static color_t bgcol;
-
-static font_t fonts[FONTS] = {
-    [FONT_SANS_S] = {.glyphs = (glyph_t *)bakedInterDisplayRegular12,
-                     .nglyphs = sizeof(bakedInterDisplayRegular12),
-                     .bitmap = atlasInterDisplayRegular12,
-                     .nbitmap = sizeof(atlasInterDisplayRegular12)},
-    [FONT_SANS_M] = {.glyphs = (glyph_t *)bakedInterDisplayRegular14,
-                     .nglyphs = sizeof(bakedInterDisplayRegular14),
-                     .bitmap = atlasInterDisplayRegular14,
-                     .nbitmap = sizeof(atlasInterDisplayRegular14)},
-    [FONT_SANS_BOLD_M] = {.glyphs = (glyph_t *)bakedInterDisplaySemiBold14,
-                          .nglyphs = sizeof(bakedInterDisplaySemiBold14),
-                          .bitmap = atlasInterDisplaySemiBold14,
-                          .nbitmap = sizeof(atlasInterDisplaySemiBold14)},
-    [FONT_ICONS_M] = {.glyphs = (glyph_t *)bakedIcons14,
-                      .nglyphs = sizeof(bakedIcons14),
-                      .bitmap = atlasIcons14,
-                      .nbitmap = sizeof(atlasIcons14)},
-    [FONT_ICONS_L] = {.glyphs = (glyph_t *)bakedIcons20,
-                      .nglyphs = sizeof(bakedIcons20),
-                      .bitmap = atlasIcons20,
-                      .nbitmap = sizeof(atlasIcons20)},
-    [FONT_ICONS_XL] = {.glyphs = (glyph_t *)bakedIcons32,
-                       .nglyphs = sizeof(bakedIcons32),
-                       .bitmap = atlasIcons32,
-                       .nbitmap = sizeof(atlasIcons32)},
-    [FONT_MONO_S] = {.glyphs = (glyph_t *)bakedJetBrainsMonoRegular12,
-                     .nglyphs = sizeof(bakedJetBrainsMonoRegular12),
-                     .bitmap = atlasJetBrainsMonoRegular12,
-                     .nbitmap = sizeof(atlasJetBrainsMonoRegular12)},
-    [FONT_MONO_M] = {.glyphs = (glyph_t *)bakedJetBrainsMonoRegular14,
-                     .nglyphs = sizeof(bakedJetBrainsMonoRegular14),
-                     .bitmap = atlasJetBrainsMonoRegular14,
-                     .nbitmap = sizeof(atlasJetBrainsMonoRegular14)},
-    [FONT_MONO_L] = {.glyphs = (glyph_t *)bakedJetBrainsMonoRegular20,
-                     .nglyphs = sizeof(bakedJetBrainsMonoRegular20),
-                     .bitmap = atlasJetBrainsMonoRegular20,
-                     .nbitmap = sizeof(atlasJetBrainsMonoRegular20)}};
+static font_t fonts[FONTS] = {0};
+static bool usehidpi = false;
 
 static sg_pipeline pipe;
 static sg_sampler smp;
@@ -87,26 +60,33 @@ void logger(const char *tag, uint32_t log_level, uint32_t log_item_id,
   printf("%s at %s:%d\n", message_or_null, filename_or_null, line_nr);
 }
 
-void gfx_init(void) {
-  sg_setup(&(sg_desc){
-      .environment = sglue_environment(),
-      .logger.func = logger,
-  });
-
-  sg_shader shd = sg_make_shader(shader_shader_desc(sg_query_backend()));
-
-  sg_pipeline_desc pipdesc = {0};
-  pipdesc.shader = shd;
-  pipdesc.layout.attrs[0].format = SG_VERTEXFORMAT_FLOAT2;
-  pipdesc.layout.attrs[1].format = SG_VERTEXFORMAT_FLOAT2;
-  pipdesc.layout.attrs[2].format = SG_VERTEXFORMAT_FLOAT4;
-  pipdesc.colors[0].blend.enabled = true;
-  pipdesc.colors[0].blend.src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA;
-  pipdesc.colors[0].blend.dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
-  pipdesc.colors[0].write_mask = SG_COLORMASK_RGB;
-  pipe = sg_make_pipeline(&pipdesc);
+static void fonts_setup(bool hidpi) {
+  if (hidpi) {
+    fonts[FONT_SANS_S]      = (font_t){.glyphs = (glyph_t *)bakedInterDisplayRegularhidpi12,  .nglyphs = sizeof(bakedInterDisplayRegularhidpi12),  .bitmap = atlasInterDisplayRegularhidpi12,  .nbitmap = sizeof(atlasInterDisplayRegularhidpi12)};
+    fonts[FONT_SANS_M]      = (font_t){.glyphs = (glyph_t *)bakedInterDisplayRegularhidpi14,  .nglyphs = sizeof(bakedInterDisplayRegularhidpi14),  .bitmap = atlasInterDisplayRegularhidpi14,  .nbitmap = sizeof(atlasInterDisplayRegularhidpi14)};
+    fonts[FONT_SANS_BOLD_M] = (font_t){.glyphs = (glyph_t *)bakedInterDisplaySemiBoldhidpi14, .nglyphs = sizeof(bakedInterDisplaySemiBoldhidpi14), .bitmap = atlasInterDisplaySemiBoldhidpi14, .nbitmap = sizeof(atlasInterDisplaySemiBoldhidpi14)};
+    fonts[FONT_ICONS_M]     = (font_t){.glyphs = (glyph_t *)bakedIconshidpi14,                .nglyphs = sizeof(bakedIconshidpi14),                .bitmap = atlasIconshidpi14,                .nbitmap = sizeof(atlasIconshidpi14)};
+    fonts[FONT_ICONS_L]     = (font_t){.glyphs = (glyph_t *)bakedIconshidpi20,                .nglyphs = sizeof(bakedIconshidpi20),                .bitmap = atlasIconshidpi20,                .nbitmap = sizeof(atlasIconshidpi20)};
+    fonts[FONT_ICONS_XL]    = (font_t){.glyphs = (glyph_t *)bakedIconshidpi32,                .nglyphs = sizeof(bakedIconshidpi32),                .bitmap = atlasIconshidpi32,                .nbitmap = sizeof(atlasIconshidpi32)};
+    fonts[FONT_MONO_S]      = (font_t){.glyphs = (glyph_t *)bakedJetBrainsMonoRegularhidpi12, .nglyphs = sizeof(bakedJetBrainsMonoRegularhidpi12), .bitmap = atlasJetBrainsMonoRegularhidpi12, .nbitmap = sizeof(atlasJetBrainsMonoRegularhidpi12)};
+    fonts[FONT_MONO_M]      = (font_t){.glyphs = (glyph_t *)bakedJetBrainsMonoRegularhidpi14, .nglyphs = sizeof(bakedJetBrainsMonoRegularhidpi14), .bitmap = atlasJetBrainsMonoRegularhidpi14, .nbitmap = sizeof(atlasJetBrainsMonoRegularhidpi14)};
+    fonts[FONT_MONO_L]      = (font_t){.glyphs = (glyph_t *)bakedJetBrainsMonoRegularhidpi20, .nglyphs = sizeof(bakedJetBrainsMonoRegularhidpi20), .bitmap = atlasJetBrainsMonoRegularhidpi20, .nbitmap = sizeof(atlasJetBrainsMonoRegularhidpi20)};
+  } else {
+    fonts[FONT_SANS_S]      = (font_t){.glyphs = (glyph_t *)bakedInterDisplayRegular12,       .nglyphs = sizeof(bakedInterDisplayRegular12),       .bitmap = atlasInterDisplayRegular12,       .nbitmap = sizeof(atlasInterDisplayRegular12)};
+    fonts[FONT_SANS_M]      = (font_t){.glyphs = (glyph_t *)bakedInterDisplayRegular14,       .nglyphs = sizeof(bakedInterDisplayRegular14),       .bitmap = atlasInterDisplayRegular14,       .nbitmap = sizeof(atlasInterDisplayRegular14)};
+    fonts[FONT_SANS_BOLD_M] = (font_t){.glyphs = (glyph_t *)bakedInterDisplaySemiBold14,      .nglyphs = sizeof(bakedInterDisplaySemiBold14),      .bitmap = atlasInterDisplaySemiBold14,      .nbitmap = sizeof(atlasInterDisplaySemiBold14)};
+    fonts[FONT_ICONS_M]     = (font_t){.glyphs = (glyph_t *)bakedIcons14,                     .nglyphs = sizeof(bakedIcons14),                     .bitmap = atlasIcons14,                     .nbitmap = sizeof(atlasIcons14)};
+    fonts[FONT_ICONS_L]     = (font_t){.glyphs = (glyph_t *)bakedIcons20,                     .nglyphs = sizeof(bakedIcons20),                     .bitmap = atlasIcons20,                     .nbitmap = sizeof(atlasIcons20)};
+    fonts[FONT_ICONS_XL]    = (font_t){.glyphs = (glyph_t *)bakedIcons32,                     .nglyphs = sizeof(bakedIcons32),                     .bitmap = atlasIcons32,                     .nbitmap = sizeof(atlasIcons32)};
+    fonts[FONT_MONO_S]      = (font_t){.glyphs = (glyph_t *)bakedJetBrainsMonoRegular12,       .nglyphs = sizeof(bakedJetBrainsMonoRegular12),       .bitmap = atlasJetBrainsMonoRegular12,       .nbitmap = sizeof(atlasJetBrainsMonoRegular12)};
+    fonts[FONT_MONO_M]      = (font_t){.glyphs = (glyph_t *)bakedJetBrainsMonoRegular14,       .nglyphs = sizeof(bakedJetBrainsMonoRegular14),       .bitmap = atlasJetBrainsMonoRegular14,       .nbitmap = sizeof(atlasJetBrainsMonoRegular14)};
+    fonts[FONT_MONO_L]      = (font_t){.glyphs = (glyph_t *)bakedJetBrainsMonoRegular20,       .nglyphs = sizeof(bakedJetBrainsMonoRegular20),       .bitmap = atlasJetBrainsMonoRegular20,       .nbitmap = sizeof(atlasJetBrainsMonoRegular20)};
+  }
 
   for (int font = 0; font < FONTS; font++) {
+    sg_destroy_image(atlases[font]);
+    sg_destroy_view(atlasviews[font]);
+
     atlases[font] = sg_make_image(&(sg_image_desc){
         .pixel_format = SG_PIXELFORMAT_R8,
         .width = 512,
@@ -136,6 +116,30 @@ void gfx_init(void) {
     fonts[font].desc = bot;
   }
 
+  usehidpi = hidpi;
+}
+
+void gfx_init(void) {
+  sg_setup(&(sg_desc){
+      .environment = sglue_environment(),
+      .logger.func = logger,
+  });
+
+  sg_shader shd = sg_make_shader(shader_shader_desc(sg_query_backend()));
+
+  sg_pipeline_desc pipdesc = {0};
+  pipdesc.shader = shd;
+  pipdesc.layout.attrs[0].format = SG_VERTEXFORMAT_FLOAT2;
+  pipdesc.layout.attrs[1].format = SG_VERTEXFORMAT_FLOAT2;
+  pipdesc.layout.attrs[2].format = SG_VERTEXFORMAT_FLOAT4;
+  pipdesc.colors[0].blend.enabled = true;
+  pipdesc.colors[0].blend.src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA;
+  pipdesc.colors[0].blend.dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+  pipdesc.colors[0].write_mask = SG_COLORMASK_RGB;
+  pipe = sg_make_pipeline(&pipdesc);
+
+  fonts_setup(sapp_dpi_scale() >= 1.5F);
+
   for (int i = 0; i < QUADS; i++) {
     buf[i] = sg_make_buffer(&(sg_buffer_desc){
         .usage.vertex_buffer = true,
@@ -156,6 +160,10 @@ void gfx_init(void) {
 void gfx_deinit(void) { sg_shutdown(); }
 
 void gfx_drawstart(color_t color) {
+  bool hidpi = sapp_dpi_scale() >= 1.5F;
+  if (hidpi != usehidpi)
+    fonts_setup(hidpi);
+
   for (int i = 0; i < QUADS; i++) {
     quads[i].len = 0;
   }
@@ -310,7 +318,8 @@ void gfx_measuretext(string_t str, textdesc_t desc, textmeasure_t *measure) {
 }
 
 color_t gfx_darken(color_t c, float amount) {
-  assert(amount >= 0 && amount <= 1.0F && "gfx_darken: percentage should be in [0,1]");
+  assert(amount >= 0 && amount <= 1.0F &&
+         "gfx_darken: percentage should be in [0,1]");
   return (color_t){
       c.r * (1 - amount),
       c.g * (1 - amount),
@@ -320,7 +329,8 @@ color_t gfx_darken(color_t c, float amount) {
 }
 
 color_t gfx_lighten(color_t c, float amount) {
-  assert(amount >= 0 && amount <= 1.0F && "gfx_lighten: percentage should be in [0,1]");
+  assert(amount >= 0 && amount <= 1.0F &&
+         "gfx_lighten: percentage should be in [0,1]");
   return (color_t){
       c.r + ((1 - c.r) * amount),
       c.g + ((1 - c.g) * amount),
@@ -330,7 +340,8 @@ color_t gfx_lighten(color_t c, float amount) {
 }
 
 color_t gfx_setalpha(color_t c, float amount) {
-  assert(amount >= 0 && amount <= 1.0F && "gfx_setalpha: percentage should be in [0,1]");
+  assert(amount >= 0 && amount <= 1.0F &&
+         "gfx_setalpha: percentage should be in [0,1]");
   return (color_t){
       c.r,
       c.g,
