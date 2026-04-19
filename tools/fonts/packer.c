@@ -14,10 +14,18 @@ unsigned char fontbuf[NBUF];
 unsigned char bitmap[NBITMAP2];
 stbtt_bakedchar chardata[96];
 
-#define len(arr) sizeof(arr) / sizeof(arr[0])
+#define len(arr) (sizeof(arr) / sizeof((arr)[0]))
+
+// strndup is not available on all platforms
+static inline char *dupe(const char *str, unsigned len) {
+  char *buf = malloc(len + 1);
+  memcpy(buf, str, len);
+  buf[len] = '\0';
+  return buf;
+}
 
 const char *basename(const char *path) {
-  for (int i = strlen(path); i >= 0; i--) {
+  for (unsigned i = strlen(path); i >= 0; i--) {
     if (path[i] == '/')
       return &path[i + 1];
   }
@@ -26,9 +34,9 @@ const char *basename(const char *path) {
 }
 
 char *filename(const char *basename) {
-  for (int i = strlen(basename); i >= 0; i--) {
+  for (unsigned i = strlen(basename); i >= 0; i--) {
     if (basename[i] == '.') {
-      return strndup(basename, i);
+      return dupe(basename, i);
     }
   }
   return strdup(basename);
@@ -47,7 +55,8 @@ void writefile(const char *dir, const char *file, float pts, float nfont,
   unsigned char *asbuf = (unsigned char *)chardata;
   size_t bufsz = sizeof(chardata);
 
-  char hpath[256], cpath[256];
+  char hpath[256];
+  char cpath[256];
   snprintf(hpath, sizeof(hpath), "%s/%s.%.0f%s.h", dir, file, pts, suffix);
   snprintf(cpath, sizeof(cpath), "%s/%s.%.0f%s.c", dir, file, pts, suffix);
 
@@ -99,12 +108,12 @@ int main(int argc, char **argv) {
   }
 
   const char *fontpath = argv[1];
-  float points = atof(argv[2]);
+  float points = (float)atof(argv[2]);
   assert(!isnan(points) && "main: Unable to parse font size");
 
   // Figma uses points at 72 DPI; convert to pixels at 96 DPI
-  float nfont = points * (96.0f / 72.0f);
-  float nfont2x = nfont * 2.0f;
+  float nfont = points * (96.0F / 72.0F);
+  float nfont2x = nfont * 2.0F;
 
   char *file = filename(basename(fontpath));
   const char *dir = "src/gfx/fonts";
