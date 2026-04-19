@@ -134,6 +134,11 @@ start: src/main
 config:
 	compiledb make
 
+.PHONY: nuke
+nuke: clean
+	rm -f src/gfx/fonts/*
+	rm vnd/*.o
+
 # The extra arg is required because clang-tidy breaks (due to elevating the
 # warning to error) before the rule could be disabled in .clang-tidy
 .PHONY: lint
