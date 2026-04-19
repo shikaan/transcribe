@@ -2,7 +2,6 @@
 #include <sokol_app.h>
 #include <stdio.h>
 
-#include "audio/audio.h"
 #include "gfx/gfx.h"
 #include "input/input.h"
 #include "prof/prof.h"
@@ -10,9 +9,6 @@
 #include "ui/ui.h"
 
 static void init(void) {
-#ifdef DEBUG
-  audio_open("/Users/manuel/dev/shikaan/transcriptions/test.mp3");
-#endif
   gfx_init();
 }
 
@@ -35,8 +31,8 @@ sapp_desc sokol_main(int argc, char *argv[]) {
                      .frame_cb = frame,
                      .cleanup_cb = cleanup,
                      .event_cb = input_event,
-                     .window_title = "Transcribling",
                      .width = 1024,
                      .height = 768,
-                     .high_dpi = true};
+                     .high_dpi = true,
+                     .window_title = "Transcribling"};
 }

@@ -18,5 +18,6 @@ typedef enum {
   ERR_AUDIO_ALLOC = -104,
 
   ERR_FILES = -200,
-  ERR_FILES_CANCEL = -201
+  ERR_FILES_CANCEL = -201,
+  ERR_FILES_REOPEN = -202
 } result_t;

@@ -38,14 +38,23 @@ ifeq ($(UNAME_S),Darwin)
     SOKOL_LDFLAGS := -framework Cocoa -framework Metal -framework MetalKit \
                      -framework QuartzCore -framework AudioToolbox \
                      -framework Accelerate
+    SOKOL_SRC     := vnd/sokol.m
+
+    FILES_SRC     := src/files/macos.m
 else ifeq ($(UNAME_S),Linux)
     SOKOL_BACKEND := SOKOL_GLCORE
     SOKOL_CC      := $(CC)
     SOKOL_LDFLAGS := -lGL -lX11 -lXi -lXcursor -ldl -lm -lpthread
+    SOKOL_SRC     :=
+
+    FILES_SRC     := src/files/linux.c
 else
     SOKOL_BACKEND := SOKOL_D3D11
     SOKOL_CC      := $(CC)
     SOKOL_LDFLAGS := -ld3d11 -ldxgi -ld3dcompiler
+    SOKOL_SRC     :=
+
+    FILES_SRC     := src/files/windows.c
 endif
 
 # Debug-specific flags
@@ -73,8 +82,6 @@ vnd/sokol.o: vnd/sokol.m
 
 vnd/miniaudio.o: CFLAGS :=-O2
 
-vnd/tinyfiledialogs.o: CFLAGS := -O2
-
 vnd/rubberband.o: vnd/rubberband/single/RubberBandSingle.cpp
 	$(CXX) -O2 -c $< -o $@
 
@@ -89,11 +96,16 @@ src/gfx/fonts/%.o: CFLAGS := -O2
 src/gfx/gfx.o: CFLAGS += -D$(SOKOL_BACKEND)
 src/gfx/gfx.o: src/gfx/gfx.c | src/gfx/shader.h
 
+src/files/files.o: CFLAGS := -O2
+src/files/files.o: $(FILES_SRC)
+	$(SOKOL_CC) $(CFLAGS) -c $< -o $@
+
 src/main: LDFLAGS := $(SOKOL_LDFLAGS) -lc++
 src/main: CFLAGS += -D$(SOKOL_BACKEND)
-src/main: vnd/sokol.o vnd/miniaudio.o vnd/tinyfiledialogs.o vnd/rubberband.o \
+src/main: vnd/sokol.o vnd/miniaudio.o vnd/rubberband.o \
 	src/gfx/gfx.o src/ui/ui.o src/audio/audio.o src/audio/samples.o \
 	src/input/input.o src/prof/prof.o src/fmt/fmt.o $(FONT_OBJECTS) \
+	src/files/files.o \
 	| src/gfx/shader.h
 
 .PHONY: assets

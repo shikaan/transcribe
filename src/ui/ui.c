@@ -67,25 +67,14 @@ static float loopa = 0;
 static float loopb = 0;
 static tempo_t tempo = TEMPO_100;
 static float pitch = 0;
-
-#ifndef NDEBUG
-// This block exists uniquely not to break the UI when we load the app in debug
-// mode with a preloaded file.
-static char namebuf[1024] = "test.mp3";
-static string_t filename = {namebuf, 8};
-#else
 static char namebuf[1024] = {0};
 static string_t filename = {namebuf, 0};
-#endif
 
 static void openfile(void) {
   char pathbuf[1024] = {0};
   result_t r = files_open(pathbuf, len(pathbuf));
   // TODO: tell user why the file was not loaded (e.g., "Operation cancelled")
-  if (r == ERR_FILES_CANCEL) {
-    puts(pathbuf);
-    return;
-  }
+  if (r != OK) return;
 
   r = audio_open(pathbuf);
   // TODO: error handling
