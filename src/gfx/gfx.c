@@ -1,6 +1,7 @@
 #include "gfx.h"
 
 #include <assert.h>
+#include <math.h>
 #include <sokol_app.h>
 #include <sokol_gfx.h>
 #include <sokol_glue.h>
@@ -252,8 +253,10 @@ static float gfx_glyph(float x, float y, char c, fonttype_t font, color_t col) {
 
   // x,y are logical pixels; g.xoff/yoff are physical pixels
   // Scale cursor to physical, then add the already-physical offset
-  float px = (x * scale) + g.xoff;
-  float py = (y * scale) + g.yoff;
+  // FIXME: rounding is needed for low-res screen to render fonts better
+  //        however, glyphs that are too thin still don't render perfectly...
+  float px = roundf((x * scale) + g.xoff);
+  float py = roundf((y * scale) + g.yoff);
 
   // GPU coordinates are in NDC (normalized device coordinates) which is in the
   // -1, +1 range. The 2.0f scaling is used to map [0,1] -> [-1 +1]
