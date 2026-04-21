@@ -115,8 +115,8 @@ assets: tools/fonts/packer
 	tools/fonts/packer assets/Icons.ttf 14
 	tools/fonts/packer assets/Icons.ttf 20
 	tools/fonts/packer assets/Icons.ttf 32
-	tools/fonts/packer assets/InterDisplayRegular.ttf 12
 	tools/fonts/packer assets/InterDisplayRegular.ttf 14
+	tools/fonts/packer assets/InterDisplaySemiBold.ttf 12
 	tools/fonts/packer assets/InterDisplaySemiBold.ttf 14
 	tools/fonts/packer assets/JetBrainsMonoRegular.ttf 12
 	tools/fonts/packer assets/JetBrainsMonoRegular.ttf 14

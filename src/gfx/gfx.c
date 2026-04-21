@@ -11,7 +11,7 @@
 #include "fonts/Icons14.h"
 #include "fonts/Icons20.h"
 #include "fonts/Icons32.h"
-#include "fonts/InterDisplayRegular12.h"
+#include "fonts/InterDisplaySemiBold12.h"
 #include "fonts/InterDisplayRegular14.h"
 #include "fonts/InterDisplaySemiBold14.h"
 #include "fonts/JetBrainsMonoRegular12.h"
@@ -21,7 +21,7 @@
 #include "fonts/Icons14hidpi.h"
 #include "fonts/Icons20hidpi.h"
 #include "fonts/Icons32hidpi.h"
-#include "fonts/InterDisplayRegular12hidpi.h"
+#include "fonts/InterDisplaySemiBold12hidpi.h"
 #include "fonts/InterDisplayRegular14hidpi.h"
 #include "fonts/InterDisplaySemiBold14hidpi.h"
 #include "fonts/JetBrainsMonoRegular12hidpi.h"
@@ -63,7 +63,7 @@ void logger(const char *tag, uint32_t log_level, uint32_t log_item_id,
 
 static void fonts_setup(bool hidpi) {
   if (hidpi) {
-    fonts[FONT_SANS_S]      = (font_t){.glyphs = (glyph_t *)bakedInterDisplayRegularhidpi12,  .nglyphs = sizeof(bakedInterDisplayRegularhidpi12),  .bitmap = atlasInterDisplayRegularhidpi12,  .nbitmap = sizeof(atlasInterDisplayRegularhidpi12)};
+    fonts[FONT_SANS_BOLD_S]      = (font_t){.glyphs = (glyph_t *)bakedInterDisplaySemiBoldhidpi12,  .nglyphs = sizeof(bakedInterDisplaySemiBoldhidpi12),  .bitmap = atlasInterDisplaySemiBoldhidpi12,  .nbitmap = sizeof(atlasInterDisplaySemiBoldhidpi12)};
     fonts[FONT_SANS_M]      = (font_t){.glyphs = (glyph_t *)bakedInterDisplayRegularhidpi14,  .nglyphs = sizeof(bakedInterDisplayRegularhidpi14),  .bitmap = atlasInterDisplayRegularhidpi14,  .nbitmap = sizeof(atlasInterDisplayRegularhidpi14)};
     fonts[FONT_SANS_BOLD_M] = (font_t){.glyphs = (glyph_t *)bakedInterDisplaySemiBoldhidpi14, .nglyphs = sizeof(bakedInterDisplaySemiBoldhidpi14), .bitmap = atlasInterDisplaySemiBoldhidpi14, .nbitmap = sizeof(atlasInterDisplaySemiBoldhidpi14)};
     fonts[FONT_ICONS_M]     = (font_t){.glyphs = (glyph_t *)bakedIconshidpi14,                .nglyphs = sizeof(bakedIconshidpi14),                .bitmap = atlasIconshidpi14,                .nbitmap = sizeof(atlasIconshidpi14)};
@@ -73,7 +73,7 @@ static void fonts_setup(bool hidpi) {
     fonts[FONT_MONO_M]      = (font_t){.glyphs = (glyph_t *)bakedJetBrainsMonoRegularhidpi14, .nglyphs = sizeof(bakedJetBrainsMonoRegularhidpi14), .bitmap = atlasJetBrainsMonoRegularhidpi14, .nbitmap = sizeof(atlasJetBrainsMonoRegularhidpi14)};
     fonts[FONT_MONO_L]      = (font_t){.glyphs = (glyph_t *)bakedJetBrainsMonoRegularhidpi20, .nglyphs = sizeof(bakedJetBrainsMonoRegularhidpi20), .bitmap = atlasJetBrainsMonoRegularhidpi20, .nbitmap = sizeof(atlasJetBrainsMonoRegularhidpi20)};
   } else {
-    fonts[FONT_SANS_S]      = (font_t){.glyphs = (glyph_t *)bakedInterDisplayRegular12,       .nglyphs = sizeof(bakedInterDisplayRegular12),       .bitmap = atlasInterDisplayRegular12,       .nbitmap = sizeof(atlasInterDisplayRegular12)};
+    fonts[FONT_SANS_BOLD_S]      = (font_t){.glyphs = (glyph_t *)bakedInterDisplaySemiBold12,       .nglyphs = sizeof(bakedInterDisplaySemiBold12),       .bitmap = atlasInterDisplaySemiBold12,       .nbitmap = sizeof(atlasInterDisplaySemiBold12)};
     fonts[FONT_SANS_M]      = (font_t){.glyphs = (glyph_t *)bakedInterDisplayRegular14,       .nglyphs = sizeof(bakedInterDisplayRegular14),       .bitmap = atlasInterDisplayRegular14,       .nbitmap = sizeof(atlasInterDisplayRegular14)};
     fonts[FONT_SANS_BOLD_M] = (font_t){.glyphs = (glyph_t *)bakedInterDisplaySemiBold14,      .nglyphs = sizeof(bakedInterDisplaySemiBold14),      .bitmap = atlasInterDisplaySemiBold14,      .nbitmap = sizeof(atlasInterDisplaySemiBold14)};
     fonts[FONT_ICONS_M]     = (font_t){.glyphs = (glyph_t *)bakedIcons14,                     .nglyphs = sizeof(bakedIcons14),                     .bitmap = atlasIcons14,                     .nbitmap = sizeof(atlasIcons14)};

@@ -22,7 +22,7 @@ void ui_stepper(float x, float y, float w, float h, stepperdesc_t desc) {
   float vspace = 0;
 
   if (desc.label.len > 0) {
-    textdesc_t ldesc = {FONT_SANS_S, 2.5F};
+    textdesc_t ldesc = {FONT_SANS_BOLD_S, 2.0F};
     gfx_measuretext(desc.label, ldesc, &m);
     gfx_text(x + (w / 2) - (m.w / 2), y + m.asc, desc.label, ldesc,
              theme->colors[COLOR_TEXTLIGHT]);
