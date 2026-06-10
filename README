@@ -4,4 +4,4 @@ transcribe
 Build
 -----
 
-  make BUILD_TYPE=release
+  make BUILD_TYPE=release main
